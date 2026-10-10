@@ -13,3 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# IDEs
+.idea/
+.idea_modules/
+*.iml
+*.iws

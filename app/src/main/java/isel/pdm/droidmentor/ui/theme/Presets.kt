@@ -33,14 +33,3 @@ val PresetThemes: List<AppColors> =
     presetSpecs.map { it.toAppColors(light = false) } +
             presetSpecs.map { it.toAppColors(light = true) }
 
-/**
- * Allowed background colors for each mode. The gap between them avoids
- * mid-tone backgrounds where neither dark nor light text is readable.
- */
-object BackgroundLimits {
-    fun saturation(light: Boolean) = if (light) 0f..0.2f else 0f..0.5f
-    fun value(light: Boolean) = if (light) 0.9f..1f else 0f..0.15f
-
-    /** Brightness used when turning a color into a background (inside [value]). */
-    fun defaultValue(light: Boolean) = if (light) 0.97f else 0.04f
-}

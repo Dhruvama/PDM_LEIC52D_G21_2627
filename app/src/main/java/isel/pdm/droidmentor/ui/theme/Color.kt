@@ -19,7 +19,7 @@ fun Color.isLightColor() = luminance() > LIGHT_LUMINANCE_THRESHOLD
  * @param b The second color.
  * @return The contrast ratio between the two colors.
  */
-private fun contrastRatio(a: Color, b: Color): Float {
+internal fun contrastRatio(a: Color, b: Color): Float {
     val la = a.luminance()
     val lb = b.luminance()
     return (max(la, lb) + 0.05f) / (min(la, lb) + 0.05f)
@@ -49,14 +49,19 @@ internal fun Color.readableOn(
     background: Color,
     minContrast: Float = 3f
 ): Color {
+    if (contrastRatio(this, background) >= minContrast) return this
+
     val target = if (background.isLightColor()) Color.Black else Color.White
-    var c = this
-    var steps = 0
-    while (contrastRatio(c, background) < minContrast && steps < 20) {
-        c = lerp(c, target, 0.08f)
-        steps++
+
+    // 0 = this color (not enough), 1 = pure black/white (always enough).
+    var notEnough = 0f
+    var enough = 1f
+    repeat(12) {
+        val mid = (notEnough + enough) / 2
+        if (contrastRatio(lerp(this, target, mid), background) >= minContrast) enough = mid
+        else notEnough = mid
     }
-    return c
+    return lerp(this, target, enough)
 }
 
 /** More saturation and a minimum brightness, so the glows from the Material theme stand out.
@@ -90,4 +95,16 @@ fun Color.toBackground(light: Boolean): Color {
         hsv[1].coerceIn(BackgroundLimits.saturation(light)),
         if (light) 0.97f else 0.04f
     )
+}
+
+/**
+ * Allowed background colors for each mode. The gap between them avoids
+ * mid-tone backgrounds where neither dark nor light text is readable.
+ */
+object BackgroundLimits {
+    fun saturation(light: Boolean) = if (light) 0f..0.2f else 0f..0.5f
+    fun value(light: Boolean) = if (light) 0.9f..1f else 0f..0.15f
+
+    /** Brightness used when turning a color into a background (inside [value]). */
+    fun defaultValue(light: Boolean) = if (light) 0.97f else 0.04f
 }
