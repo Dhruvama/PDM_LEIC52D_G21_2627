@@ -2,4 +2,11 @@
     <string name="app_name">DroidMentor</string>
     <string name="title_activity_about">AboutActivity</string>
     <string name="title_activity_settings">Definições</string>
+    <string name="title_app_name_first">Droid</string>
+    <string name="title_app_name_second">Mentor</string>
+    <string name="title_about_description">About DroidMentor</string>
+    <string name="title_headline">Your senior Android mentor</string>
+    <string name="title_subtitle">Ask about Kotlin, Compose and architecture. Your chats stay on this phone.</string>
+    <string name="title_start_chat">Start a chat</string>
+    <string name="title_footnote">Uses your own Gemini API key</string>
 </resources>

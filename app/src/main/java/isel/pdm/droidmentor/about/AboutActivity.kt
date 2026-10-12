@@ -6,16 +6,13 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import isel.pdm.droidmentor.buildLLogTag
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
-
 import androidx.core.net.toUri
 
 private const val REPOSITORY_URL = "https://github.com/Dhruvama/PDM_LEIC52D_G21_2627"
 
 class AboutActivity : ComponentActivity() {
-    private val logTag = buildLLogTag(this::class.java.simpleName)
-
+    private val logTag = "AboutActivity"
     companion object {
         fun navigateFrom(origin: ComponentActivity){
             val msg = Intent(origin, AboutActivity::class.java)
@@ -30,8 +27,8 @@ class AboutActivity : ComponentActivity() {
         setContent {
             DroidMentorTheme {
                 AboutScreen(
-                    onNavigateToGitHub = { openRepository() }
-
+                    onNavigateToGitHub = { openRepository() },
+                    onBack = { finish() }
                 )
             }
         }
