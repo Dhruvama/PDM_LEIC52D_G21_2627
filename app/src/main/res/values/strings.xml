@@ -1,7 +1,49 @@
 <resources>
     <string name="app_name">DroidMentor</string>
-    <string name="title_activity_about">AboutActivity</string>
-    <string name="title_activity_settings">Definições</string>
+
+    <!-- Active Chat: message bubbles -->
+    <string name="user_message_edit_description">Edit message</string>
+    <string name="user_message_attached_image">Attached image</string>
+    <string name="mentor_avatar_letter">M</string>
+    <string name="mentor_message_copy">Copy</string>
+    <string name="mentor_message_regenerate">Regenerate</string>
+
+    <!-- Active Chat: top bar -->
+    <string name="new_chat">New chat</string>
+    <string name="chat_top_bar_back">Back</string>
+    <string name="chat_top_bar_options">More options</string>
+
+    <!-- Active Chat: thinking indicator -->
+    <string name="thinking_indicator_text">Mentor is thinking…</string>
+
+    <!-- Active Chat: status banners -->
+    <string name="offline_banner_message">You\'re offline. You can read this chat, but new questions are paused until you reconnect.</string>
+    <string name="error_banner_retry">Retry</string>
+    <string name="error_banner_dismiss">Dismiss</string>
+
+    <!-- Active Chat: message list -->
+    <string name="welcome_good_morning">Good morning!</string>
+    <string name="welcome_good_afternoon">Good afternoon!</string>
+    <string name="welcome_good_evening">Good evening!</string>
+    <string name="welcome_question">What are we building today?</string>
+    <string name="suggestion_review_viewmodel">Review my ViewModel</string>
+    <string name="suggestion_explain_recomposition">Explain recomposition</string>
+    <string name="suggestion_room_or_datastore">Room or DataStore?</string>
+
+    <!-- Active Chat: composer -->
+    <string name="composer_placeholder">Ask about Android, Kotlin or Compose…</string>
+    <string name="composer_placeholder_offline">Offline — reconnect to ask</string>
+    <string name="composer_attach">Attach image</string>
+    <string name="composer_camera">Take photo</string>
+    <string name="composer_send">Send</string>
+
+    <!-- Active Chat: attachment preview -->
+    <string name="attachment_remove">Remove attachment</string>
+
+    <!-- Active Chat: code block -->
+    <string name="code_block_expand">Expand code</string>
+    <string name="expanded_code_title">Code</string>
+    <string name="expanded_code_close">Close</string>
     <string name="title_app_name_first">Droid</string>
     <string name="title_app_name_second">Mentor</string>
     <string name="title_about_description">About DroidMentor</string>
