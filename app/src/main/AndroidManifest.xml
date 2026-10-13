@@ -42,6 +42,13 @@
             android:theme="@style/Theme.DroidMentor"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Ecrã de Chat (ActiveChatActivity) -->
+        <activity
+            android:name=".activechat.ActiveChatActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DroidMentor"
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 
 </manifest>

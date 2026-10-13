@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import isel.pdm.droidmentor.about.AboutActivity
+import isel.pdm.droidmentor.activechat.ActiveChatActivity
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 
 // No shared Logging.kt was visible to me, so the tag is defined locally.
@@ -32,8 +33,7 @@ class TitleActivity : ComponentActivity() {
             DroidMentorTheme {
                 TitleScreen(
                     onStartChat = {
-                        // TODO: navigate to Active Chat
-                        Log.i(logTag, "Start chat pressed (navigation to Active Chat not wired yet)")
+                        ActiveChatActivity.navigateFrom(this@TitleActivity, assembleLogo = true)
                     },
                     onAbout = {
                         Log.i(logTag, "About pressed (About screen not built yet)")

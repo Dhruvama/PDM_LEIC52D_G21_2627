@@ -1,12 +1,17 @@
 package isel.pdm.droidmentor.activechat
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,11 +19,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
+import isel.pdm.droidmentor.buildLogTag
 import isel.pdm.droidmentor.activechat.components.ChatComposer
 import isel.pdm.droidmentor.activechat.components.ChatTopBar
 import isel.pdm.droidmentor.activechat.components.ErrorBanner
@@ -34,13 +42,56 @@ import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
 
 const val ACTIVE_CHAT_SCREEN_TAG = "active_chat_screen"
 
-// The real ActiveChatScreen(viewModel, ...) root, with a Scaffold, is added in the ViewModel step.
-// This empty stub only exists because ActiveChatActivity already calls ActiveChatScreen().
+private val logTag = buildLogTag("ActiveChatScreen")
+
 /**
- * Root of the Active Chat screen. Empty for now; it will get the ViewModel in a later step.
+ * Root of the Active Chat screen: connects [viewModel] to the stateless screen content.
+ *
+ * @param viewModel Holds the conversation and handles the user's actions.
+ * @param assembleLogo `true` when coming from the Title screen, so the welcome's logo
+ * gathers from its cloud.
+ * @param onBack Called when the user taps the back button.
  */
 @Composable
-fun ActiveChatScreen() {
+fun ActiveChatScreen(viewModel: ActiveChatScreenViewModel, assembleLogo: Boolean, onBack: () -> Unit) {
+    val clipboard = LocalClipboardManager.current
+    // The content handles the insets and draws its own background.
+    Scaffold(containerColor = Color.Transparent, contentWindowInsets = WindowInsets(0)) { _ ->
+        ActiveChatScreenContent(
+            state = viewModel.state,
+            assembleLogo = assembleLogo,
+            onBackClick = onBack,
+            onOptionsClick = {
+                Log.v(logTag, "Options clicked")
+                // TODO: options menu
+            },
+            onInputChange = { viewModel.updateInput(it) },
+            onAttachClick = {
+                Log.v(logTag, "Attach clicked")
+                // TODO (phase E): pick an image from the gallery
+            },
+            onCameraClick = {
+                Log.v(logTag, "Camera clicked")
+                // TODO (phase E): take a photo
+            },
+            onRemoveAttachment = { viewModel.removeAttachedImage() },
+            onSendClick = { viewModel.send() },
+            onEditMessage = {
+                Log.v(logTag, "Edit message ${it.id} clicked")
+                // TODO (phase D): edit the message
+            },
+            onCopyMessage = { clipboard.setText(AnnotatedString(it.text)) },
+            onRegenerateMessage = {
+                Log.v(logTag, "Regenerate message ${it.id} clicked")
+                // TODO (phase D): regenerate the reply
+            },
+            onRetryClick = {
+                Log.v(logTag, "Retry clicked")
+                // TODO (phase C): retry the request to Gemini
+            },
+            onDismissError = { viewModel.dismissError() },
+        )
+    }
 }
 
 /**
@@ -98,16 +149,16 @@ private fun ActiveChatScreenContent(
             if (state.isOffline) {
                 OfflineBanner()
             }
-            if (state.errorMessage != null) {
+            if (state.status is ChatStatus.Failed) {
                 ErrorBanner(
-                    message = state.errorMessage,
+                    message = failureText(state.status.reason),
                     onRetryClick = onRetryClick,
                     onDismissClick = onDismissError,
                 )
             }
             MessageList(
                 messages = state.messages,
-                isWaitingForReply = state.isWaitingForReply,
+                isWaitingForReply = state.status is ChatStatus.Waiting,
                 onEditMessage = onEditMessage,
                 onCopyMessage = onCopyMessage,
                 onRegenerateMessage = onRegenerateMessage,
@@ -121,7 +172,7 @@ private fun ActiveChatScreenContent(
                 onTextChange = onInputChange,
                 attachedImage = state.attachedImage,
                 onRemoveAttachment = onRemoveAttachment,
-                isInputEnabled = !state.isOffline && !state.isWaitingForReply,
+                isInputEnabled = state.status !is ChatStatus.Waiting && !state.isOffline,
                 isSendEnabled = state.canSend,
                 onAttachClick = onAttachClick,
                 onCameraClick = onCameraClick,
@@ -135,7 +186,34 @@ private fun ActiveChatScreenContent(
     }
 }
 
+/** The message shown in the error banner for [reason]. */
+@Composable
+private fun failureText(reason: FailureReason): String =
+    when (reason) {
+        FailureReason.RATE_LIMITED -> stringResource(R.string.failure_rate_limited)
+        FailureReason.SERVER_ERROR -> stringResource(R.string.failure_server_error)
+        FailureReason.INVALID_KEY -> stringResource(R.string.failure_invalid_key)
+        FailureReason.NO_CONNECTION -> stringResource(R.string.failure_no_connection)
+        FailureReason.UNKNOWN -> stringResource(R.string.failure_unknown)
+    }
+
 //==================================== TESTS/PREVIEWS ====================================//
+
+@Preview(showBackground = true)
+@Composable
+private fun FailureTextPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Column {
+            FailureReason.entries.forEach { reason ->
+                Text(
+                    text = failureText(reason),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+        }
+    }
+}
 
 @Preview(showBackground = true, widthDp = 400, heightDp = 860)
 @Composable
@@ -214,7 +292,7 @@ private fun ActiveChatScreenNewChatWithCustomLogoColorsPreview() {
 private fun ActiveChatScreenWaitingPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
         ActiveChatScreenContent(
-            state = previewNormalState.copy(isWaitingForReply = true),
+            state = previewNormalState.copy(status = ChatStatus.Waiting),
             onBackClick = { },
             onOptionsClick = { },
             onInputChange = { },
@@ -258,7 +336,29 @@ private fun ActiveChatScreenOfflinePreview() {
 private fun ActiveChatScreenErrorPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
         ActiveChatScreenContent(
-            state = previewNormalState.copy(errorMessage = previewErrorMessage),
+            state = previewNormalState.copy(status = ChatStatus.Failed(FailureReason.RATE_LIMITED)),
+            onBackClick = { },
+            onOptionsClick = { },
+            onInputChange = { },
+            onAttachClick = { },
+            onCameraClick = { },
+            onRemoveAttachment = { },
+            onSendClick = { },
+            onEditMessage = { },
+            onCopyMessage = { },
+            onRegenerateMessage = { },
+            onRetryClick = { },
+            onDismissError = { },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 860)
+@Composable
+private fun ActiveChatScreenInvalidKeyPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        ActiveChatScreenContent(
+            state = previewNormalState.copy(status = ChatStatus.Failed(FailureReason.INVALID_KEY)),
             onBackClick = { },
             onOptionsClick = { },
             onInputChange = { },
@@ -410,8 +510,6 @@ private fun ActiveChatScreenInteractivePreview() {
         )
     }
 }
-
-private const val previewErrorMessage = "Too many requests (429). Try again in a moment."
 
 private const val previewAttachmentText = "What's wrong with this layout?"
 

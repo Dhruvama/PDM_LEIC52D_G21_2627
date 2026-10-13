@@ -1,334 +1,509 @@
 package isel.pdm.droidmentor.titlescreen
 
-import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
-import android.graphics.Xfermode
 import android.provider.Settings
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.RadialGradientShader
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.lerp
+import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
+import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
+import isel.pdm.droidmentor.ui.theme.LocalAppColors
+import isel.pdm.droidmentor.ui.theme.PresetThemes
 import kotlin.math.PI
 import kotlin.math.cos
-import kotlin.math.max
-import kotlin.math.min
+import kotlin.math.exp
+import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
+import kotlinx.coroutines.delay
+import androidx.compose.ui.graphics.Canvas as BitmapCanvas
 
 /** Test tag of [ParticleBust]. */
 const val PARTICLE_BUST_TAG = "particle_bust"
 
-// ---------------------------------------------------------------------------
-// Shape constants
-// ---------------------------------------------------------------------------
+// Same model as the About screen's mascot (about/ParticleDroid.kt), copied here so the
+// Title screen does not depend on the About screen.
 
-private const val HEAD_COUNT = 380
-private const val NECK_COUNT = 60
-private const val TORSO_COUNT = 560
-private const val DOT_COUNT = HEAD_COUNT + NECK_COUNT + TORSO_COUNT // 1000
-private const val NECK_RING_SIZE = 12
+// ---- Particles ----
+private const val PARTICLE_COUNT = 420
+private const val ANTENNA_DOTS = 14
+private const val HEAD_DOTS = PARTICLE_COUNT - 2 * ANTENNA_DOTS
 
-private const val SPIN_SPEED = 0.45f
-private const val GATHER_DURATION_MS = 1800
-private const val REDUCED_MOTION_TIME_SECONDS = 2f
+// ---- Loop: the droid holds, scatters into a swirl and comes back ----
+private const val DROID_HOLD_MILLIS = 6_000L
+private const val SWIRL_HOLD_MILLIS = 2_600L
 
-private val GOLDEN = (PI * (3.0 - sqrt(5.0))).toFloat()
-private const val TWO_PI = (2.0 * PI).toFloat()
-
-/** Plus blending (additive), allocated once. Used only when glow is on. */
-private val AdditiveBlend: Xfermode = PorterDuffXfermode(PorterDuff.Mode.ADD)
-
-// ---------------------------------------------------------------------------
-// Public composable
-// ---------------------------------------------------------------------------
+// ---- Scatter: 0 = droid, 1 = swirl ----
+private const val GATHERED = 0f
+private const val SCATTERED = 1f
 
 /**
- * A person's bust drawn with 1000 dots (head, neck and torso) that slowly spins
- * around the vertical axis.
+ * A spring instead of a fixed duration: it keeps the current speed when the morph is
+ * interrupted half way (e.g. "Start a chat" during the loop), so the dots never jump.
+ */
+private val MORPH_SPEC = spring<Float>(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 30f)
+
+/** How much (radians) the dots are swept around the center half way through the morph. */
+private const val SCATTER_TWIST = 0.7f
+
+/** Time drawn when nothing animates: the droid, eyes open. */
+private const val STILL_TIME_SECONDS = 2f
+
+// ---- Blink and float ----
+private const val BLINK_PERIOD_SECONDS = 3.6f
+private const val BLINK_SECONDS = 0.24f
+private const val FLOAT_PERIOD_SECONDS = 3.6f
+private const val FLOAT_AMOUNT = 0.045f
+
+// ---- Droid geometry, in logo units (radius 1, y up) ----
+private const val HEAD_CY = -0.3f
+private const val HEAD_R = 0.7f
+private const val EYE_X = 0.42f * HEAD_R
+private const val EYE_Y = HEAD_CY + 0.45f * HEAD_R
+private const val EYE_RADIUS = 0.14f * HEAD_R
+
+// ---- Drawing ----
+private const val GLOW_SPRITE_PX = 32
+private const val SPRITE_BASE_DP = 3f
+private const val SPRITE_DEPTH_DP = 4.4f
+private const val SPRITE_SCALE = 0.85f
+private const val FRONT_DEPTH_THRESHOLD = 0.92f
+
+/** How many steps the head's gradient (bottom accent → top accent) is split into. */
+private const val GRADIENT_STEPS = 12
+
+private const val RANDOM_SEED = 7
+
+private val GOLDEN_ANGLE = (PI * (3.0 - sqrt(5.0))).toFloat()
+
+// Indexes inside the scratch FloatArray(4) written by the shape functions.
+private const val X = 0
+private const val Y = 1
+private const val DEPTH = 2
+private const val VISIBILITY = 3
+
+/**
+ * The Title screen's mascot made of glowing dots, the same as the About screen's: the Android
+ * head (with antennae that sway and eyes that blink) floats over a pulsing glow, then scatters
+ * into a swirl and gathers back into the head. When the screen opens, the dots gather into the head.
  *
- * When [gathered] is false the dots float in a loose cloud; when it becomes true
- * they fly into the bust shape (head first, torso last). On first composition the
- * dots start scattered and gather, so the bust "assembles" when the screen opens.
+ * While [gathered] is false the loop stops and the dots stay in the swirl (used for the
+ * transition to the chat). When it becomes true again, the head re-forms and the loop restarts.
  *
- * Purely decorative: it has no content description.
+ * Purely decorative: it has no content description. Only the draw phase repeats every frame;
+ * nothing recomposes while animating. If the user turned animations off in the system
+ * settings, it is drawn without motion.
  *
- * @param gathered true = dots form the bust; false = dots scattered in a cloud.
- * @param modifier modifier applied to the canvas.
- * @param glow additive blending with a halo around each dot; only looks good on dark backgrounds.
- * @param staticTimeSeconds when not null there is no animation and this instant is drawn
- * (previews / reduced motion).
+ * @param gathered true = the droid and its loop; false = dots held in the swirl.
+ * @param modifier Modifier applied to the drawing area.
+ * @param glow Additive blending, so overlapping glows add up. Only looks good on dark backgrounds.
+ * @param staticTimeSeconds When not `null`, nothing animates and the mascot is drawn at this
+ * instant (useful for previews).
  */
 @Composable
 fun ParticleBust(
     gathered: Boolean,
     modifier: Modifier = Modifier,
-    glow: Boolean = false,
+    glow: Boolean = !LocalAppColors.current.isLight,
     staticTimeSeconds: Float? = null,
 ) {
     val context = LocalContext.current
-
-    // Reduced motion: system animations turned off -> gathered and static.
-    val reducedMotion = remember(context) {
-        Settings.Global.getFloat(
-            context.contentResolver,
-            Settings.Global.ANIMATOR_DURATION_SCALE,
-            1f,
-        ) == 0f
+    val animatorScale = remember {
+        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
     }
-    val effectiveStaticTime: Float? =
-        staticTimeSeconds ?: if (reducedMotion) REDUCED_MOTION_TIME_SECONDS else null
-    val isStatic = effectiveStaticTime != null
-    val effectiveGathered = gathered || reducedMotion
+    val frozenTime = staticTimeSeconds ?: if (animatorScale == 0f) STILL_TIME_SECONDS else null
 
-    // Starts false so the first frame is scattered; the effect flips it to trigger the gathering.
-    var started by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { started = true }
+    val seeds = remember { DroidSeeds() }
+    val from = remember { FloatArray(4) }
+    val to = remember { FloatArray(4) }
 
-    val animatedProgress = animateFloatAsState(
-        targetValue = if (effectiveGathered && started) 1f else 0f,
-        animationSpec = tween(GATHER_DURATION_MS),
-        label = "bustFormProgress",
-    )
-    // Static mode skips the animation so previews show the final state immediately.
-    val staticProgress = if (effectiveGathered) 1f else 0f
+    // Starts scattered, so the dots gather into the head when the screen opens
+    val scatter = remember { Animatable(SCATTERED) }
 
-    // Time source. Read ONLY inside the draw lambda below: only the draw phase
-    // repeats every frame; composition and layout are not re-run.
-    val timeSeconds = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(isStatic) {
-        if (isStatic) return@LaunchedEffect
-        var startNanos = -1L
-        while (true) {
-            withFrameNanos { frameNanos ->
-                if (startNanos < 0L) startNanos = frameNanos
-                timeSeconds.floatValue = (frameNanos - startNanos) / 1_000_000_000f
+    var timeSeconds by remember { mutableFloatStateOf(0f) }
+    var swirlTimeSeconds by remember { mutableFloatStateOf(0f) }
+    if (frozenTime == null) {
+        LaunchedEffect(Unit) {
+            val startNanos = withFrameNanos { it }
+            while (true) {
+                withFrameNanos {
+                    timeSeconds = (it - startNanos) / 1_000_000_000f
+                    swirlTimeSeconds = swirlClockSeconds(it)
+                }
+            }
+        }
+        // Restarts from wherever the dots are each time gathered changes
+        LaunchedEffect(gathered) {
+            if (!gathered) {
+                scatter.animateTo(SCATTERED, MORPH_SPEC)
+                return@LaunchedEffect
+            }
+            while (true) {
+                scatter.animateTo(GATHERED, MORPH_SPEC)
+                delay(DROID_HOLD_MILLIS)
+                scatter.animateTo(SCATTERED, MORPH_SPEC)
+                delay(SWIRL_HOLD_MILLIS)
             }
         }
     }
 
-    // Allocated once: seeds, scratch arrays and paint.
-    val seeds = remember { CloudSeeds.create(DOT_COUNT) }
-    val cloudScratch = remember { FloatArray(3) }
-    val bustScratch = remember { FloatArray(3) }
-    val paint = remember { Paint(Paint.ANTI_ALIAS_FLAG) }
-
-    // Theme colors read once, outside the draw loop.
-    val colors = MaterialTheme.colorScheme
-    val onSurfaceArgb = colors.onSurface.toArgb()
-    val tertiaryArgb = colors.tertiary.toArgb()
-    val primaryArgb = colors.primary.toArgb()
+    val c = LocalAppColors.current
+    val sprites = remember(c.bottomAccent, c.topAccent, c.textPrimary) {
+        DroidSprites(
+            gradient = Array(GRADIENT_STEPS) {
+                makeGlowSprite(lerp(c.bottomAccent, c.topAccent, it / (GRADIENT_STEPS - 1f)))
+            },
+            highlight = makeGlowSprite(c.textPrimary),
+        )
+    }
+    val staticScatter = if (gathered) GATHERED else SCATTERED
 
     Canvas(modifier = modifier.testTag(PARTICLE_BUST_TAG)) {
-        // State reads happen here, in the draw phase only.
-        val t = effectiveStaticTime ?: timeSeconds.floatValue
-        val progress = if (isStatic) staticProgress else animatedProgress.value
-        val spin = t * SPIN_SPEED
+        // timeSeconds and scatter are read ONLY here, so each frame only repeats the draw phase.
+        drawDroid(
+            elapsed = frozenTime ?: timeSeconds,
+            swirlTime = frozenTime ?: swirlTimeSeconds,
+            scatter = if (frozenTime == null) scatter.value else staticScatter,
+            seeds = seeds,
+            from = from,
+            to = to,
+            sprites = sprites,
+            glowColor = c.accent,
+            shadowColor = c.textPrimary,
+            additive = glow,
+        )
+    }
+}
 
-        val centerX = size.width / 2f
-        val centerY = size.height / 2f
-        val scale = min(size.width, size.height) * 0.52f
+/** One sprite per step of the head's gradient, plus one for the dots in front. */
+private class DroidSprites(val gradient: Array<ImageBitmap>, val highlight: ImageBitmap)
 
-        paint.xfermode = if (glow) AdditiveBlend else null
+/** Soft round dot of [color], drawn once into a bitmap so each frame only copies it. */
+private fun makeGlowSprite(color: Color, sizePx: Int = GLOW_SPRITE_PX): ImageBitmap {
+    val bitmap = ImageBitmap(sizePx, sizePx)
+    val center = Offset(sizePx / 2f, sizePx / 2f)
+    val paint = Paint()
+    paint.shader = RadialGradientShader(
+        center = center,
+        radius = sizePx / 2f,
+        colors = listOf(color, color.copy(alpha = 0.55f), Color.Transparent),
+        colorStops = listOf(0f, 0.35f, 1f),
+    )
+    BitmapCanvas(bitmap).drawCircle(center, sizePx / 2f, paint)
+    return bitmap
+}
 
-        drawIntoCanvas { canvas ->
-            val native = canvas.nativeCanvas
-            for (i in 0 until DOT_COUNT) {
-                val m = easeInOutCubic(
-                    (progress * 1.5f - (i / DOT_COUNT.toFloat()) * 0.5f).coerceIn(0f, 1f)
-                )
-                fillCloud(i, t, seeds, cloudScratch)
-                fillBust(i, spin, bustScratch)
+/**
+ * Fixed positions and random values, created once with a fixed seed, so the mascot looks
+ * the same every time and nothing is allocated per frame.
+ */
+private class DroidSeeds {
+    // Head dots, spread evenly over a half disk (sunflower pattern), from the center outwards
+    val headX = FloatArray(HEAD_DOTS)
+    val headY = FloatArray(HEAD_DOTS)
 
-                val x = lerp(cloudScratch[0], bustScratch[0], m)
-                val y = lerp(cloudScratch[1], bustScratch[1], m)
-                val depth = lerp(cloudScratch[2], bustScratch[2], m)
+    val phase = FloatArray(PARTICLE_COUNT)
+    val swirlRadius = FloatArray(PARTICLE_COUNT)
+    val swirlJitter = FloatArray(PARTICLE_COUNT)
 
-                var alpha = 0.18f + depth * 0.72f
-                if (y > 0.45f) alpha *= max(0f, 1f - (y - 0.45f) / 0.25f)
-                if (alpha < 0.01f) continue
-
-                val radius = (1.3f + depth * 2.3f) * density
-                val argb = when {
-                    depth > 0.88f -> onSurfaceArgb
-                    i % 3 == 0 -> tertiaryArgb
-                    else -> primaryArgb
-                }
-                val px = centerX + x * scale
-                val py = centerY + y * scale
-
-                paint.color = argb
-                if (glow) {
-                    paint.alpha = (alpha * 0.25f * 255f).toInt().coerceIn(0, 255)
-                    native.drawCircle(px, py, radius * 2.5f, paint)
-                }
-                paint.alpha = (alpha * 255f).toInt().coerceIn(0, 255)
-                native.drawCircle(px, py, radius, paint)
+    init {
+        // Sunflower over a full disk, keeping only its top half. The total grows until
+        // the top half has enough dots, so the rim isn't left out.
+        var total = HEAD_DOTS * 2
+        var count: Int
+        do {
+            count = 0
+            for (j in 0 until total) {
+                if (count == HEAD_DOTS) break
+                val r = sqrt((j + 0.5f) / total)
+                val a = j * GOLDEN_ANGLE
+                val y = sin(a) * r
+                if (y < 0f) continue
+                headX[count] = cos(a) * r * HEAD_R
+                headY[count] = HEAD_CY + y * HEAD_R
+                count++
             }
+            total += 8
+        } while (count < HEAD_DOTS)
+
+        val random = Random(RANDOM_SEED)
+        for (i in 0 until PARTICLE_COUNT) {
+            phase[i] = random.nextFloat() * 2f * PI.toFloat()
+            swirlRadius[i] = 0.12f + random.nextFloat().pow(0.7f) * 0.83f
+            swirlJitter[i] = (random.nextFloat() - 0.5f) * 0.5f
         }
     }
 }
 
-// ---------------------------------------------------------------------------
-// Shape functions: each fills out[0] = x, out[1] = y, out[2] = depth
-// ---------------------------------------------------------------------------
+/**
+ * Swirl's clock, from a frame time of `withFrameNanos`. The chat's logo turns its entry swirl
+ * with this same clock, so both swirls line up while the screens cross-fade. It wraps around
+ * after 1000 s so the float value stays precise.
+ */
+private fun swirlClockSeconds(frameNanos: Long): Float =
+    ((frameNanos / 1_000_000L) % 1_000_000L) / 1000f
 
-/** Routes dot [i] (0..999) to the head, neck or torso function. */
-private fun fillBust(i: Int, spin: Float, out: FloatArray) {
-    when {
-        i < HEAD_COUNT -> fillHead(i, spin, out)
-        i < HEAD_COUNT + NECK_COUNT -> fillNeck(i - HEAD_COUNT, spin, out)
-        else -> fillTorso(i - HEAD_COUNT - NECK_COUNT, spin, out)
+/**
+ * Draws the glow, the shadow and every dot [elapsed] seconds after the mascot appeared,
+ * with the dots [scatter] of the way from the droid (0) to the swirl (1). The swirl turns
+ * with [swirlTime].
+ */
+private fun DrawScope.drawDroid(
+    elapsed: Float,
+    swirlTime: Float,
+    scatter: Float,
+    seeds: DroidSeeds,
+    from: FloatArray,
+    to: FloatArray,
+    sprites: DroidSprites,
+    glowColor: Color,
+    shadowColor: Color,
+    additive: Boolean,
+) {
+    val logoRadius = size.minDimension / 2f
+    // 1 while it looks like the droid, 0 while it is the swirl (fades the shadow)
+    val droidAmount = 1f - easeInOutCubic(scatter.coerceIn(0f, 1f))
+
+    val floatOffset = sin(elapsed * 2f * PI.toFloat() / FLOAT_PERIOD_SECONDS) * FLOAT_AMOUNT
+    val pulse = 0.85f + 0.15f * sin(elapsed * 2f * PI.toFloat() / 4.8f)
+    val eyeOpen = eyeOpenness(elapsed)
+
+    // Glow behind
+    drawCircle(
+        Brush.radialGradient(
+            listOf(glowColor.copy(alpha = 0.3f * pulse), Color.Transparent),
+            center = center,
+            radius = logoRadius
+        )
+    )
+    // Shadow on the "floor", smaller when the head is higher
+    val shadowWidth = size.width * (0.42f - floatOffset * 1.3f)
+    drawOval(
+        shadowColor.copy(alpha = 0.12f * droidAmount),
+        topLeft = Offset(center.x - shadowWidth / 2, size.height * 0.81f),
+        size = Size(shadowWidth, size.height * 0.05f)
+    )
+
+    val blendMode = if (additive) BlendMode.Plus else BlendMode.SrcOver
+
+    for (i in 0 until PARTICLE_COUNT) {
+        droidPoint(i, elapsed, eyeOpen, seeds, from)
+        swirlPoint(i, swirlTime, seeds, to)
+
+        // Later dots start later, so the change "flows" from the center of the head outwards
+        val stagger = (scatter * 1.4f - (i.toFloat() / PARTICLE_COUNT) * 0.4f).coerceIn(0f, 1f)
+        val progress = easeInOutCubic(stagger)
+
+        val visibility = lerp(from[VISIBILITY], to[VISIBILITY], progress)
+        if (visibility < 0.02f) continue
+        var x = lerp(from[X], to[X], progress)
+        var y = lerp(from[Y], to[Y], progress)
+        val depth = lerp(from[DEPTH], to[DEPTH], progress)
+
+        // Swept around the center on the way (same direction as the swirl), so the dots
+        // travel along an arc instead of a straight line
+        val twist = sin(PI.toFloat() * progress) * SCATTER_TWIST
+        if (twist != 0f) {
+            val twistCos = cos(twist)
+            val twistSin = sin(twist)
+            val straightX = x
+            x = straightX * twistCos - y * twistSin
+            y = straightX * twistSin + y * twistCos
+        }
+        y += floatOffset
+
+        val sprite = if (depth > FRONT_DEPTH_THRESHOLD) {
+            sprites.highlight
+        } else {
+            // Same direction as the head's crossGradient: top-left → bottom-right
+            val g = (((x - y) / 2f + 1f) / 2f).coerceIn(0f, 1f)
+            sprites.gradient[(g * (GRADIENT_STEPS - 1)).roundToInt()]
+        }
+        val spriteSize = ((SPRITE_BASE_DP + depth * SPRITE_DEPTH_DP) * SPRITE_SCALE *
+            (0.6f + 0.4f * visibility)).dp.toPx()
+        val alpha = ((0.2f + depth * 0.65f) * visibility).coerceAtMost(1f)
+        val spriteScale = spriteSize / GLOW_SPRITE_PX
+
+        // Placed with a transform (not whole pixels), so slow dots glide instead of stepping
+        withTransform({
+            translate(
+                left = center.x + x * logoRadius - spriteSize / 2f,
+                top = center.y - y * logoRadius - spriteSize / 2f
+            )
+            scale(spriteScale, spriteScale, pivot = Offset.Zero)
+        }) {
+            drawImage(image = sprite, alpha = alpha, blendMode = blendMode)
+        }
     }
 }
 
-/** Head: Fibonacci sphere, k in 0..379. */
-private fun fillHead(k: Int, spin: Float, out: FloatArray) {
-    val yy = 1f - k / (HEAD_COUNT - 1f) * 2f
-    val r = sqrt(1f - yy * yy)
-    val a = k * GOLDEN + spin
-    out[0] = cos(a) * r * 0.24f
-    out[1] = -0.42f + yy * 0.29f
-    out[2] = (sin(a) * r + 1f) / 2f
+/**
+ * Android head: the first [HEAD_DOTS] dots fill a half disk with two eye holes, the rest
+ * draw the two antennae. The head is shaded like a dome, with a light sweeping across it.
+ */
+private fun droidPoint(i: Int, t: Float, eyeOpen: Float, seeds: DroidSeeds, out: FloatArray) {
+    if (i < HEAD_DOTS) {
+        var x = seeds.headX[i] + sin(t * 1.3f + seeds.phase[i]) * 0.006f
+        var y = seeds.headY[i] + cos(t * 1.1f + seeds.phase[i]) * 0.006f
+
+        // Eyes: dots inside an eye are pushed to its edge, so they outline it.
+        // Closing the eye squashes the hole into a line.
+        val eyeRadiusY = EYE_RADIUS * eyeOpen
+        for (side in -1..1 step 2) {
+            val eyeX = side * EYE_X
+            val dx = (x - eyeX) / EYE_RADIUS
+            val dy = (y - EYE_Y) / eyeRadiusY
+            val d2 = dx * dx + dy * dy
+            if (d2 < 1f) {
+                if (d2 < 1e-6f) {
+                    y = EYE_Y + eyeRadiusY
+                } else {
+                    val toEdge = 1f / sqrt(d2)
+                    x = eyeX + dx * toEdge * EYE_RADIUS
+                    y = EYE_Y + dy * toEdge * eyeRadiusY
+                }
+            }
+        }
+
+        val nx = x / HEAD_R
+        val ny = (y - HEAD_CY) / HEAD_R
+        val dome = sqrt((1f - nx * nx - ny * ny).coerceAtLeast(0f))
+        val sweepX = sin(t * 0.8f) * 1.3f
+        val sweep = exp(-(nx - sweepX) * (nx - sweepX) / 0.05f)
+
+        out[X] = x
+        out[Y] = y
+        out[DEPTH] = (0.2f + 0.6f * dome + 0.35f * sweep).coerceIn(0f, 1f)
+        out[VISIBILITY] = 1f
+    } else {
+        val k = i - HEAD_DOTS
+        val side = if (k < ANTENNA_DOTS) -1f else 1f
+        val f = (k % ANTENNA_DOTS) / (ANTENNA_DOTS - 1f)
+        // Left one at 120°, right one at 60°; the tip sways more than the base
+        val angle = (PI / 2).toFloat() - side * (PI / 6).toFloat() +
+            sin(t * 2.2f + side) * 0.08f * f
+        val r = HEAD_R * (0.85f + 0.45f * f)
+        out[X] = cos(angle) * r
+        out[Y] = HEAD_CY + sin(angle) * r
+        out[DEPTH] = if (k % ANTENNA_DOTS == ANTENNA_DOTS - 1) 1f else 0.7f
+        out[VISIBILITY] = 1f
+    }
 }
 
-/** Neck: 5 rings of 12 dots, k in 0..59. */
-private fun fillNeck(k: Int, spin: Float, out: FloatArray) {
-    val row = k / NECK_RING_SIZE
-    val col = k % NECK_RING_SIZE
-    val a = col / NECK_RING_SIZE.toFloat() * TWO_PI + spin + row * 0.25f
-    out[0] = cos(a) * 0.085f
-    out[1] = -0.12f + row * 0.03f
-    out[2] = (sin(a) + 1f) / 2f
+/** Swirl: three spiral arms rotating around the center, brighter in the core. */
+private fun swirlPoint(i: Int, t: Float, seeds: DroidSeeds, out: FloatArray) {
+    val r = seeds.swirlRadius[i]
+    val arm = (i % 3) * (2f * PI.toFloat() / 3f)
+    val angle = arm + r * 3.6f + t * 0.7f + seeds.swirlJitter[i]
+    out[X] = cos(angle) * r
+    out[Y] = sin(angle) * r * 0.8f
+    out[DEPTH] = (0.25f + 0.65f * (1f - r) + 0.15f * sin(t * 2f + seeds.phase[i])).coerceIn(0f, 1f)
+    out[VISIBILITY] = 1f
 }
 
-/** Torso: spiral that widens into the shoulders, k in 0..559. */
-private fun fillTorso(k: Int, spin: Float, out: FloatArray) {
-    val v = k / (TORSO_COUNT - 1f)
-    val s = min(1f, v * 2.4f)
-    val width = 0.11f + 0.55f * sqrt(1f - (1f - s) * (1f - s))
-    val a = k * GOLDEN + spin
-    out[0] = cos(a) * width
-    out[1] = 0.03f + v * 0.62f
-    out[2] = (sin(a) + 1f) / 2f
+/** 1 = eyes open. Once per [BLINK_PERIOD_SECONDS] they close and open quickly. */
+private fun eyeOpenness(t: Float): Float {
+    val phase = t % BLINK_PERIOD_SECONDS
+    val blinkStart = BLINK_PERIOD_SECONDS - BLINK_SECONDS
+    if (phase < blinkStart) return 1f
+    val x = (phase - blinkStart) / BLINK_SECONDS
+    return 1f - 0.9f * sin(PI.toFloat() * x)
 }
 
-/** Scattered position of dot [i] at time [t], from its fixed random seeds. */
-private fun fillCloud(i: Int, t: Float, seeds: CloudSeeds, out: FloatArray) {
-    val wobble = t * seeds.speed[i] + seeds.phase[i]
-    out[0] = cos(seeds.angle[i]) * seeds.radius[i] + sin(wobble) * 0.06f
-    out[1] = sin(seeds.angle[i]) * seeds.radius[i] * 0.9f + cos(wobble) * 0.06f
-    out[2] = 0.4f + 0.3f * sin(t + seeds.phase[i])
-}
+/** Slow at the start and at the end, fast in the middle. */
+private fun easeInOutCubic(x: Float): Float =
+    if (x < 0.5f) 4f * x * x * x
+    else {
+        val inverse = -2f * x + 2f
+        1f - inverse * inverse * inverse / 2f
+    }
 
-/** Per-dot random seeds for the cloud, created once with a fixed seed. */
-private class CloudSeeds(
-    val angle: FloatArray,
-    val radius: FloatArray,
-    val phase: FloatArray,
-    val speed: FloatArray,
-) {
-    companion object {
-        fun create(count: Int): CloudSeeds {
-            val random = Random(seed = 42)
-            return CloudSeeds(
-                angle = FloatArray(count) { random.nextFloat() * TWO_PI },
-                radius = FloatArray(count) { 0.6f + random.nextFloat() * 0.9f },   // 0.6..1.5
-                phase = FloatArray(count) { random.nextFloat() * TWO_PI },
-                speed = FloatArray(count) { 0.5f + random.nextFloat() },           // 0.5..1.5
+private fun lerp(start: Float, stop: Float, fraction: Float): Float = start + (stop - start) * fraction
+
+//==================================== TESTS/PREVIEWS ====================================//
+
+private val PreviewWidth = 300.dp
+private val PreviewHeight = 330.dp
+
+@Preview
+@Composable
+private fun ParticleBustDarkPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.background(LocalAppColors.current.background)) {
+            ParticleBust(
+                gathered = true,
+                staticTimeSeconds = STILL_TIME_SECONDS,
+                modifier = Modifier.size(PreviewWidth, PreviewHeight),
             )
         }
     }
 }
 
-private fun easeInOutCubic(x: Float): Float =
-    if (x < 0.5f) {
-        4f * x * x * x
-    } else {
-        val u = -2f * x + 2f
-        1f - u * u * u / 2f
-    }
-
-// ---------------------------------------------------------------------------
-// Previews
-// ---------------------------------------------------------------------------
-
-private const val PREVIEW_STATIC_TIME = 2f
-private val PreviewWidth = 300.dp
-private val PreviewHeight = 330.dp
-
-@Preview(showBackground = true)
+@Preview
 @Composable
-private fun ParticleBustGatheredPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        ParticleBust(
-            gathered = true,
-            staticTimeSeconds = PREVIEW_STATIC_TIME,
-            modifier = Modifier.size(PreviewWidth, PreviewHeight),
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun ParticleBustScatteredPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        ParticleBust(
-            gathered = false,
-            staticTimeSeconds = PREVIEW_STATIC_TIME,
-            modifier = Modifier.size(PreviewWidth, PreviewHeight),
-        )
-    }
-}
-
-/** Run in Interactive Mode to check the rotation and the assembly. */
-@Preview(showBackground = true)
-@Composable
-private fun ParticleBustAnimatedPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        ParticleBust(
-            gathered = true,
-            modifier = Modifier.size(PreviewWidth, PreviewHeight),
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun ParticleBustGlowPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        Box(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.inverseSurface)
-                .size(PreviewWidth, PreviewHeight),
-        ) {
+private fun ParticleBustLightPreview() {
+    DroidMentorTheme(colors = DefaultLightColors) {
+        Box(Modifier.background(LocalAppColors.current.background)) {
             ParticleBust(
                 gathered = true,
-                glow = true,
-                staticTimeSeconds = PREVIEW_STATIC_TIME,
+                staticTimeSeconds = STILL_TIME_SECONDS,
+                modifier = Modifier.size(PreviewWidth, PreviewHeight),
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ParticleBustSwirlPreview() {
+    DroidMentorTheme(colors = PresetThemes[1]) {
+        Box(Modifier.background(LocalAppColors.current.background)) {
+            ParticleBust(
+                gathered = false,
+                staticTimeSeconds = 10.6f,
+                modifier = Modifier.size(PreviewWidth, PreviewHeight),
+            )
+        }
+    }
+}
+
+/** Run in Interactive Mode to check the loop and the gathering. */
+@Preview
+@Composable
+private fun ParticleBustAnimatedPreview() {
+    DroidMentorTheme(colors = PresetThemes[2]) {
+        Box(Modifier.background(LocalAppColors.current.background)) {
+            ParticleBust(
+                gathered = true,
                 modifier = Modifier.size(PreviewWidth, PreviewHeight),
             )
         }

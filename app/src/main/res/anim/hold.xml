@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keeps the screen underneath fully visible while the other one fades in or out on top of it,
+     so the cross-fade never shows the dark window background through both screens. -->
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="@android:integer/config_longAnimTime"
+    android:fromAlpha="1.0"
+    android:toAlpha="1.0" />

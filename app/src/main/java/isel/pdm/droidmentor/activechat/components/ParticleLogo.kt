@@ -56,14 +56,21 @@ private const val SHAPE_SPHERE = 1
 private const val SHAPE_HELIX = 2
 private const val SHAPE_ENTRY_CLOUD = 3
 
-/** How long the entry cloud takes to gather into the sphere. */
+/** How long the entry swirl keeps turning before it gathers: it covers the cross-fade from the Title screen. */
+private const val ENTRY_HOLD = 0.5f
+
+/** How long the entry swirl takes to gather into the sphere. */
 private const val ENTRY_DURATION = 1.2f
+
+/** When the entry is over and the normal loop takes over. */
+private const val ENTRY_END = ENTRY_HOLD + ENTRY_DURATION
 
 /** Loop time at which the sphere hold begins (after the swarm hold and the swarm → sphere morph). */
 private const val SPHERE_HOLD_START = HOLD_SECONDS + MORPH_SECONDS
 
-// The Title screen's figure is 300×330 dp and its cloud is scaled by min(300, 330) * 0.52 = 156 dp (shared with a teammate).
-private const val TITLE_CLOUD_RADIUS_DP = 156f
+// The Title screen's mascot is drawn in a 300×330 dp box, so its swirl has a radius of
+// min(300, 330) / 2 = 150 dp. The entry swirl has that same size on screen.
+private const val TITLE_SWIRL_RADIUS_DP = 150f
 
 private const val HELIX_LEVELS = 30
 private const val HELIX_SLOTS_PER_LEVEL = 6
@@ -119,8 +126,9 @@ private const val VISIBILITY = 3
  * @param glow `true` to draw the dots with additive blending, so overlapping glows add up.
  * Only looks good on dark backgrounds.
  * @param logoColors Colors chosen by the user, or `null` to use the theme's accents.
- * @param assembleOnStart `true` to start as the Title screen's big cloud and gather into the
- * sphere during the first [ENTRY_DURATION] seconds, then continue the loop from the sphere.
+ * @param assembleOnStart `true` to start as the Title screen's swirl, keep it turning for
+ * [ENTRY_HOLD] seconds (while the screens cross-fade), gather it into the sphere during the
+ * next [ENTRY_DURATION] seconds, then continue the loop from the sphere.
  * Used for the entry transition from the Title screen. Ignored when [staticTimeSeconds] is set
  * or animations are turned off.
  * @param staticTimeSeconds When not `null`, nothing animates and the logo is drawn at this
@@ -155,20 +163,22 @@ fun ParticleLogo(
     val to = remember { FloatArray(4) }
 
     var timeSeconds by remember { mutableFloatStateOf(0f) }
+    var swirlTimeSeconds by remember { mutableFloatStateOf(0f) }
     if (frozenTimeSeconds == null) {
         LaunchedEffect(Unit) {
             val startNanos = withFrameNanos { it }
             while (true) {
                 withFrameNanos { frameNanos ->
                     timeSeconds = (frameNanos - startNanos) / 1_000_000_000f
+                    swirlTimeSeconds = swirlClockSeconds(frameNanos)
                 }
             }
         }
     }
 
-    // The entry cloud must have the same size on screen as the Title screen's cloud,
+    // The entry swirl must have the same size on screen as the Title screen's swirl,
     // whatever the size of this logo.
-    val entryCloudScale = TITLE_CLOUD_RADIUS_DP / (size.value / 2f)
+    val entryCloudScale = TITLE_SWIRL_RADIUS_DP / (size.value / 2f)
 
     val c = LocalAppColors.current
     val mainColor: Color
@@ -206,6 +216,7 @@ fun ParticleLogo(
         val elapsed = frozenTimeSeconds ?: timeSeconds
         drawParticles(
             elapsed = elapsed,
+            swirlTime = frozenTimeSeconds ?: swirlTimeSeconds,
             assembleOnStart = playEntry,
             particleCount = particleCount,
             seeds = seeds,
@@ -259,6 +270,9 @@ private class SwarmSeeds(particleCount: Int) {
     val entryPhase = FloatArray(particleCount)
     val entrySpeed = FloatArray(particleCount)
 
+    val swirlRadius = FloatArray(particleCount)
+    val swirlJitter = FloatArray(particleCount)
+
     init {
         val random = Random(SWARM_RANDOM_SEED)
         for (i in 0 until particleCount) {
@@ -276,6 +290,11 @@ private class SwarmSeeds(particleCount: Int) {
             entryPhase[i] = random.nextFloat() * 2f * PI.toFloat()
             entrySpeed[i] = 0.5f + random.nextFloat()
         }
+        // In a third loop, so the swarm and entry values stay the same as before.
+        for (i in 0 until particleCount) {
+            swirlRadius[i] = 0.12f + random.nextFloat().pow(0.7f) * 0.83f
+            swirlJitter[i] = (random.nextFloat() - 0.5f) * 0.5f
+        }
     }
 }
 
@@ -283,11 +302,13 @@ private class SwarmSeeds(particleCount: Int) {
  * Draws every particle [elapsed] seconds after the logo appeared: finds which shapes are
  * being held or morphed from/to, mixes both positions per particle and draws the dot.
  *
- * When [assembleOnStart] is `true`, the first [ENTRY_DURATION] seconds morph the entry
- * cloud into the sphere, and the loop then continues from the start of the sphere hold.
+ * When [assembleOnStart] is `true`, the entry swirl turns for [ENTRY_HOLD] seconds, then morphs
+ * into the sphere during [ENTRY_DURATION] seconds, and the loop continues from the start of the
+ * sphere hold.
  */
 private fun DrawScope.drawParticles(
     elapsed: Float,
+    swirlTime: Float,
     assembleOnStart: Boolean,
     particleCount: Int,
     seeds: SwarmSeeds,
@@ -304,7 +325,7 @@ private fun DrawScope.drawParticles(
     // With the entry, the loop is shifted so that, when the entry ends, it is exactly at the
     // start of the sphere hold. The entry also rotates its sphere with this time, so there is no jump.
     val loopTime = if (assembleOnStart) {
-        elapsed - ENTRY_DURATION + SPHERE_HOLD_START
+        elapsed - ENTRY_END + SPHERE_HOLD_START
     } else {
         elapsed
     }
@@ -312,11 +333,11 @@ private fun DrawScope.drawParticles(
     val fromShape: Int
     val toShape: Int
     val morphProgress: Float
-    if (assembleOnStart && elapsed < ENTRY_DURATION) {
-        // Entry: the Title screen's cloud gathers into the sphere.
+    if (assembleOnStart && elapsed < ENTRY_END) {
+        // Entry: the Title screen's swirl keeps turning, then gathers into the sphere.
         fromShape = SHAPE_ENTRY_CLOUD
         toShape = SHAPE_SPHERE
-        morphProgress = elapsed / ENTRY_DURATION
+        morphProgress = ((elapsed - ENTRY_HOLD) / ENTRY_DURATION).coerceIn(0f, 1f)
     } else {
         // Stage 0: swarm → sphere, stage 1: sphere → helix, stage 2: helix → swarm.
         // Each stage holds its first shape for HOLD_SECONDS, then morphs for MORPH_SECONDS.
@@ -331,7 +352,9 @@ private fun DrawScope.drawParticles(
     val blendMode = if (glow) BlendMode.Plus else BlendMode.SrcOver
 
     for (i in 0 until particleCount) {
-        shapePoint(fromShape, i, particleCount, loopTime, seeds, entryCloudScale, from)
+        // The entry swirl turns with the same clock as the Title screen's, so both line up.
+        val fromTime = if (fromShape == SHAPE_ENTRY_CLOUD) swirlTime else loopTime
+        shapePoint(fromShape, i, particleCount, fromTime, seeds, entryCloudScale, from)
         shapePoint(toShape, i, particleCount, loopTime, seeds, entryCloudScale, to)
 
         // Later particles start morphing a bit later, so the change "flows" through the cloud.
@@ -392,8 +415,17 @@ private fun shapePoint(
 }
 
 /**
- * Entry cloud, used ONLY for the entry transition: the same cloud the Title screen ends with,
- * a wide ring of drifting dots, scaled by [entryCloudScale] to match its size on screen.
+ * Clock of the entry swirl, from a frame time of `withFrameNanos`. The Title screen turns its
+ * swirl with this same clock, so both swirls line up while the screens cross-fade. It wraps
+ * around after 1000 s so the float value stays precise.
+ */
+private fun swirlClockSeconds(frameNanos: Long): Float =
+    ((frameNanos / 1_000_000L) % 1_000_000L) / 1000f
+
+/**
+ * Entry swirl, used ONLY for the entry transition: the same swirl the Title screen's mascot
+ * ends with (three spiral arms rotating around the center, brighter in the core), scaled by
+ * [entryCloudScale] to match its size on screen.
  */
 private fun entryCloudPoint(
     i: Int,
@@ -402,15 +434,12 @@ private fun entryCloudPoint(
     entryCloudScale: Float,
     out: FloatArray,
 ) {
-    val angle = seeds.entryAngle[i]
-    val radius = seeds.entryRadius[i]
-    val phase = seeds.entryPhase[i]
-    val speed = seeds.entrySpeed[i]
-    val x = cos(angle) * radius + sin(t * speed + phase) * 0.06f
-    val y = sin(angle) * radius * 0.9f + cos(t * speed + phase) * 0.06f
-    out[X] = x * entryCloudScale
-    out[Y] = y * entryCloudScale
-    out[DEPTH] = 0.4f + 0.3f * sin(t + phase)
+    val r = seeds.swirlRadius[i]
+    val arm = (i % 3) * (2f * PI.toFloat() / 3f)
+    val angle = arm + r * 3.6f + t * 0.7f + seeds.swirlJitter[i]
+    out[X] = cos(angle) * r * entryCloudScale
+    out[Y] = sin(angle) * r * 0.8f * entryCloudScale
+    out[DEPTH] = (0.25f + 0.65f * (1f - r) + 0.15f * sin(t * 2f + seeds.entryPhase[i])).coerceIn(0f, 1f)
     out[VISIBILITY] = 1f
 }
 

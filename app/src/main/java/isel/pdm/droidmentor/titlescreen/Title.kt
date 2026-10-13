@@ -52,6 +52,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.R
 import kotlinx.coroutines.delay
@@ -63,8 +64,8 @@ const val START_CHAT_BUTTON_TAG = "start_chat_button"
 /** Test tag of the About button. */
 const val ABOUT_BUTTON_TAG = "about_button"
 
-/** Time the dots take to scatter before navigating to the chat. */
-private const val SCATTER_DELAY_MS = 600L
+/** Time the dots take to (almost fully) form the swirl before navigating to the chat. */
+private const val SCATTER_DELAY_MS = 700L
 
 // ---------------------------------------------------------------------------
 // Public root: owns the one piece of local UI state
@@ -90,6 +91,13 @@ fun TitleScreen(
     val context = LocalContext.current
     val reducedMotion = remember(context) { isReducedMotion(context) }
 
+    // The droid stays in the swirl while this screen fades out, and re-forms only when
+    // the user comes back to it (each time the screen starts again).
+    LifecycleStartEffect(Unit) {
+        gathered = true
+        onStopOrDispose { }
+    }
+
     TitleScreenContent(
         gathered = gathered,
         onStartChatClick = {
@@ -97,12 +105,10 @@ fun TitleScreen(
                 onStartChat()
             } else if (gathered) { // ignore taps while the transition is running
                 scope.launch {
-                    // Purely visual transition: the dots scatter, then we navigate,
-                    // and the bust re-forms so it is ready when the user comes back.
+                    // Purely visual transition: the dots form the swirl, then we navigate.
                     gathered = false
                     delay(SCATTER_DELAY_MS)
                     onStartChat()
-                    gathered = true
                 }
             }
         },

@@ -21,6 +21,13 @@
     <string name="error_banner_retry">Retry</string>
     <string name="error_banner_dismiss">Dismiss</string>
 
+    <!-- Active Chat: failure messages -->
+    <string name="failure_rate_limited">Too many requests. Wait a moment and try again.</string>
+    <string name="failure_server_error">The mentor\'s server had a problem. Try again.</string>
+    <string name="failure_invalid_key">Your Gemini API key was rejected. Check it in Settings.</string>
+    <string name="failure_no_connection">Couldn\'t reach the mentor. Check your connection.</string>
+    <string name="failure_unknown">Something went wrong. Try again.</string>
+
     <!-- Active Chat: message list -->
     <string name="welcome_good_morning">Good morning!</string>
     <string name="welcome_good_afternoon">Good afternoon!</string>
