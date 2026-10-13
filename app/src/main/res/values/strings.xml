@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">DroidMentor</string>
+    <string name="app_name" translatable="false">DroidMentor</string>
 
     <!-- Active Chat: message bubbles -->
     <string name="user_message_edit_description">Edit message</string>
     <string name="user_message_attached_image">Attached image</string>
-    <string name="mentor_avatar_letter">M</string>
+    <string name="mentor_avatar_letter" translatable="false">M</string>
     <string name="mentor_message_copy">Copy</string>
     <string name="mentor_message_regenerate">Regenerate</string>
 
@@ -44,11 +44,66 @@
     <string name="code_block_expand">Expand code</string>
     <string name="expanded_code_title">Code</string>
     <string name="expanded_code_close">Close</string>
-    <string name="title_app_name_first">Droid</string>
-    <string name="title_app_name_second">Mentor</string>
+
+    <!-- Title Screen -->
+    <string name="title_app_name_first" translatable="false">Droid</string>
+    <string name="title_app_name_second" translatable="false">Mentor</string>
     <string name="title_about_description">About DroidMentor</string>
     <string name="title_headline">Your senior Android mentor</string>
     <string name="title_subtitle">Ask about Kotlin, Compose and architecture. Your chats stay on this phone.</string>
     <string name="title_start_chat">Start a chat</string>
     <string name="title_footnote">Uses your own Gemini API key</string>
+
+    <!-- About Screen -->
+    <string name="about_tip_1">↑ Psttt, tap here mate ↑ </string>
+    <string name="about_tip_2">Heavy lifting is not for the main thread: use coroutines and Dispatchers.IO.</string>
+    <string name="about_tip_3">State hoisting: who holds the state decides, who draws just shows it.</string>
+    <string name="about_tip_4">A composable should be idempotent and side-effect free.</string>
+    <string name="about_tip_5">Your API key is yours: never put it in code or Git.</string>
+    <string name="about_tip_6">Put Log.v in lifecycle callbacks to see when the Activity is recreated.</string>
+    <string name="about_tip_7">IMPORTANT: Don\'t forget to play Elden Ring</string>
+    <string name="about_back_content_description">Back</string>
+    <string name="about_app_description">An LLM client for Android that helps you think like a senior Android dev, using the Gemini REST API.</string>
+    <string name="about_feature_byok_title">BYOK</string>
+    <string name="about_feature_byok_desc">Uses your Gemini key.</string>
+    <string name="about_feature_compose_title">Compose</string>
+    <string name="about_feature_compose_desc">100% Jetpack Compose interface, with custom themes.</string>
+    <string name="about_feature_mentor_title">Mentor</string>
+    <string name="about_feature_mentor_desc">Answers tailored to help in Android development.</string>
+    <string name="about_developers">Developers</string>
+    <string name="about_course">Course</string>
+    <string name="about_course_name">Mobile Device Programming</string>
+    <string name="about_course_details">LEIC · ISEL · Winter Semester 2026/2027</string>
+    <string name="about_professors">Professors</string>
+    <string name="about_github_button">View code on GitHub ↗</string>
+    <string name="about_footer">Made with ☕ and Kotlin at ISEL</string>
+    <string name="about_mascot_description">DroidMentor mascot. Tap for a tip.</string>
+    <string name="about_header_subtitle">Your senior Android mentor, in your pocket.</string>
+
+    <!-- Modifiers & Components -->
+    <string name="type_a_message">Type a message…</string>
+    <string name="action_send">Send</string>
+
+    <!-- Color Picker -->
+    <string name="color_picker_hue">Hue</string>
+    <string name="color_picker_saturation">Saturation</string>
+    <string name="color_picker_brightness">Brightness</string>
+
+    <!-- Chat History -->
+    <string name="chat_history_title">History</string>
+    <string name="chat_history_new_chat">New chat</string>
+    <string name="chat_history_empty_title">Start your first chat</string>
+    <string name="chat_history_empty_body">Ask about Android, Compose, architecture and much more.</string>
+    <string name="chat_history_search_hint">Search</string>
+    <string name="chat_history_clear_search">Clear search</string>
+    <string name="chat_history_no_results">No results for \"%1$s\"</string>
+    <string name="chat_history_today">Today</string>
+    <string name="chat_history_chat_deleted">Chat deleted</string>
+    <string name="chat_history_undo">Undo</string>
+    <string name="chat_history_delete">Delete chat %1$s</string>
+    <string name="chat_history_message_count_zero">0 messages</string>
+    <plurals name="chat_history_message_count">
+        <item quantity="one">1 message</item>
+        <item quantity="other">%1$d messages</item>
+    </plurals>
 </resources>

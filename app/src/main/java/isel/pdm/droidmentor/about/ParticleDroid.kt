@@ -32,12 +32,14 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
@@ -137,7 +139,7 @@ private const val VISIBILITY = 3
 fun ParticleDroid(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    size: Dp = 200.dp,
+    size: Dp = 250.dp,
     staticTimeSeconds: Float? = null,
     staticScatter: Float = GATHERED,
 ) {
@@ -198,10 +200,12 @@ fun ParticleDroid(
     // Additive glow only looks good on dark backgrounds
     val additive = !c.isLight
 
+    val description = stringResource(R.string.about_mascot_description)
+
     Canvas(
         modifier
             .size(size)
-            .semantics { contentDescription = "Mascote do DroidMentor. Toca para uma dica." }
+            .semantics { contentDescription = description }
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,

@@ -1,11 +1,14 @@
 package isel.pdm.droidmentor.about
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import androidx.core.net.toUri
 
@@ -27,7 +30,7 @@ class AboutActivity : ComponentActivity() {
         setContent {
             DroidMentorTheme {
                 AboutScreen(
-                    onNavigateToGitHub = { openRepository() },
+                    onNavigateToGitHub = ::navigateToGitHub,
                     onBack = { finish() }
                 )
             }
@@ -50,13 +53,13 @@ class AboutActivity : ComponentActivity() {
         super.onDestroy()
         Log.v(logTag, "onDestroy() on ${hashCode()}")
     }
-}
 
-private fun android.content.Context.openRepository() {
-    try {
+
+    private fun navigateToGitHub() {
         val intent = Intent(Intent.ACTION_VIEW, REPOSITORY_URL.toUri())
-        startActivity(intent)
-    } catch (e: Exception) {
-        Log.e("AboutActivity", "Couldnt navigate to the repository: ${e.message}")
+        intent.resolveActivity(packageManager)?.let {
+            startActivity(intent)
+        }
     }
+
 }
