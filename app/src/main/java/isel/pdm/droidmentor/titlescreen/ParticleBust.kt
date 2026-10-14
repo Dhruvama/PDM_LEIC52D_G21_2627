@@ -339,7 +339,8 @@ private fun DrawScope.drawDroid(
             x = straightX * twistCos - y * twistSin
             y = straightX * twistSin + y * twistCos
         }
-        y += floatOffset
+        // Only the droid floats: the swirl stays centered, where the chat's logo gathers from it
+        y += floatOffset * droidAmount
 
         val sprite = if (depth > FRONT_DEPTH_THRESHOLD) {
             sprites.highlight

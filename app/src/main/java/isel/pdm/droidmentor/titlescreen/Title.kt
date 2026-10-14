@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
@@ -36,13 +38,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
@@ -66,6 +71,20 @@ const val ABOUT_BUTTON_TAG = "about_button"
 
 /** Time the dots take to (almost fully) form the swirl before navigating to the chat. */
 private const val SCATTER_DELAY_MS = 700L
+
+// ---- The chat's empty screen, so the bust lines up with the chat's logo (portrait) ----
+
+/** Chat top bar: 44 dp buttons with 8 dp above and below (below the status bar). */
+private val CHAT_TOP_BAR_HEIGHT = 60.dp
+
+/** Size of the chat's logo in portrait. */
+private val CHAT_LOGO_SIZE = 240.dp
+
+/** Lines of the chat composer's empty text field. */
+private const val CHAT_COMPOSER_LINES = 2
+
+/** Chat composer without its text: 14 dp padding × 2, 14 dp gap, 52 dp button row, 12 dp margin. */
+private val CHAT_COMPOSER_FIXED_HEIGHT = 106.dp
 
 // ---------------------------------------------------------------------------
 // Public root: owns the one piece of local UI state
@@ -152,36 +171,117 @@ private fun TitlePortrait(
     onAbout: () -> Unit,
     background: Brush,
 ) {
-    Column(
+    val composerHeight = with(LocalDensity.current) {
+        MaterialTheme.typography.bodyLarge.lineHeight.toDp()
+    } * CHAT_COMPOSER_LINES + CHAT_COMPOSER_FIXED_HEIGHT
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(background)
-            .systemBarsPadding(),
+            .background(background),
     ) {
-        TitleTopRow(onAbout = onAbout)
-
-        Column(
+        // The space the chat leaves between its top bar and its composer, where it centers its logo.
+        Box(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                .fillMaxSize()
+                .systemBarsPadding()
+                .padding(top = CHAT_TOP_BAR_HEIGHT, bottom = composerHeight),
+            contentAlignment = Alignment.Center,
         ) {
-            ParticleBust(gathered, Modifier.size(300.dp, 330.dp))
-            TitleHeadline()
-            TitleSubtitle()
+            ChatAlignedBust(gathered)
         }
 
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 18.dp, end = 18.dp, bottom = 26.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .fillMaxSize()
+                .systemBarsPadding(),
         ) {
-            StartChatButton(onClick = onStartChatClick, modifier = Modifier.fillMaxWidth())
-            TitleFootnote()
+            TitleTopRow(onAbout = onAbout)
+            Spacer(Modifier.weight(1f))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 18.dp, end = 18.dp, bottom = 26.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                StartChatButton(onClick = onStartChatClick, modifier = Modifier.fillMaxWidth())
+                TitleFootnote()
+            }
+        }
+    }
+}
+
+/**
+ * The bust, headline and subtitle, laid out like the chat's empty screen lays out its logo,
+ * greeting and suggestions (activechat/components/MessageList.kt). So the bust's swirl is
+ * centered exactly where the chat's logo gathers from it, and nothing moves in the cross-fade.
+ */
+@Composable
+private fun ChatAlignedBust(gathered: Boolean) {
+    Column(
+        modifier = Modifier.padding(horizontal = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(22.dp),
+    ) {
+        // The bust is bigger than the chat's logo: it overflows this box, around its center.
+        Box(Modifier.size(CHAT_LOGO_SIZE), contentAlignment = Alignment.Center) {
+            ParticleBust(gathered, Modifier.requiredSize(300.dp, 330.dp))
+        }
+        Box(contentAlignment = Alignment.TopCenter) {
+            ChatWelcomeSpace()
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TitleHeadline()
+                TitleSubtitle()
+            }
+        }
+    }
+}
+
+/**
+ * Takes the same space as the chat's greeting and suggestion chips, but draws nothing and is
+ * hidden from accessibility services.
+ */
+@Composable
+private fun ChatWelcomeSpace() {
+    // Every greeting fits in one line, so the longest one gives the same height.
+    val greeting = stringResource(R.string.welcome_good_afternoon) + "\n" +
+        stringResource(R.string.welcome_question)
+    val suggestions = listOf(
+        stringResource(R.string.suggestion_review_viewmodel),
+        stringResource(R.string.suggestion_explain_recomposition),
+        stringResource(R.string.suggestion_room_or_datastore),
+    )
+    Column(
+        modifier = Modifier
+            .drawWithContent { }
+            .clearAndSetSemantics { },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(22.dp),
+    ) {
+        Text(
+            text = greeting,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            suggestions.forEach { suggestion ->
+                Box(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(text = suggestion, style = MaterialTheme.typography.labelLarge)
+                }
+            }
         }
     }
 }
@@ -359,9 +459,28 @@ private fun TitleFootnote() {
     )
 }
 
-// ---------------------------------------------------------------------------
-// Previews
-// ---------------------------------------------------------------------------
+//==================================== TESTS/PREVIEWS ====================================//
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 600)
+@Composable
+private fun ChatAlignedBustPreview() {
+    DroidMentorTheme(dynamicColor = false) {
+        Box(contentAlignment = Alignment.Center) {
+            ChatAlignedBust(gathered = true)
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun ChatWelcomeSpacePreview() {
+    DroidMentorTheme(dynamicColor = false) {
+        // Draws nothing on purpose: the border shows the space it takes.
+        Box(Modifier.border(1.dp, MaterialTheme.colorScheme.outline)) {
+            ChatWelcomeSpace()
+        }
+    }
+}
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 740)
 @Composable
