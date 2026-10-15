@@ -32,7 +32,7 @@ import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
-import isel.pdm.droidmentor.ui.theme.modifiers.glassCard
+import isel.pdm.droidmentor.ui.theme.modifiers.frostedGlass
 
 const val BACK_BUTTON_TAG = "back_button"
 const val OPTIONS_BUTTON_TAG = "options_button"
@@ -99,7 +99,7 @@ private fun RoundIconButton(
     Box(
         modifier = Modifier
             .size(44.dp)
-            .glassCard(c, CircleShape),
+            .frostedGlass(c, CircleShape),
     ) {
         IconButton(
             onClick = onClick,
@@ -125,7 +125,7 @@ private fun TitlePill(title: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .height(44.dp)
-            .glassCard(c, CircleShape)
+            .frostedGlass(c, CircleShape)
             .padding(start = 6.dp, end = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,

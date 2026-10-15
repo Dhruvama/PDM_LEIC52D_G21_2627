@@ -40,7 +40,7 @@ import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
-import isel.pdm.droidmentor.ui.theme.modifiers.glassCard
+import isel.pdm.droidmentor.ui.theme.modifiers.frostedGlass
 
 const val MESSAGE_INPUT_TAG = "message_input"
 const val ATTACH_BUTTON_TAG = "attach_button"
@@ -84,7 +84,7 @@ fun ChatComposer(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .glassCard(c, RoundedCornerShape(24.dp))
+            .frostedGlass(c, RoundedCornerShape(24.dp))
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -194,7 +194,7 @@ private fun ComposerIconButton(
     Box(
         modifier = Modifier
             .size(44.dp)
-            .glassCard(c, CircleShape),
+            .frostedGlass(c, CircleShape),
     ) {
         IconButton(
             onClick = onClick,

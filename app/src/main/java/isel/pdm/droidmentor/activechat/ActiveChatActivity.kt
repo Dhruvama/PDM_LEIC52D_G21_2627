@@ -25,7 +25,11 @@ class ActiveChatActivity : ComponentActivity() {
     companion object {
         private const val EXTRA_ASSEMBLE_LOGO = "assembleLogo"
 
-        /** Opens the chat. assembleLogo = true makes the particle logo assemble from a cloud (Title screen transition). */
+        /**
+         * Navigates to [ActiveChatActivity], fading it in over [origin].
+         * @param origin the activity that is currently showing, used to start this one.
+         * @param assembleLogo if true, the particle logo assembles from a cloud (Title screen transition).
+         */
         fun navigateFrom(origin: ComponentActivity, assembleLogo: Boolean = false) {
             val msg = Intent(origin, ActiveChatActivity::class.java)
             msg.putExtra(EXTRA_ASSEMBLE_LOGO, assembleLogo)

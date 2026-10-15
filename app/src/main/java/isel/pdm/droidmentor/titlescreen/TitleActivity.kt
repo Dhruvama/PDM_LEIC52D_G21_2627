@@ -19,7 +19,10 @@ private val logTag = "DroidMentor.TitleActivity"
 class TitleActivity : ComponentActivity() {
 
     companion object {
-        /** Starts [TitleActivity] from [origin]. */
+        /**
+         * Navigates to [TitleActivity].
+         * @param origin the activity that is currently showing, used to start this one.
+         */
         fun navigateFrom(origin: ComponentActivity) {
             origin.startActivity(Intent(origin, TitleActivity::class.java))
         }
@@ -36,7 +39,7 @@ class TitleActivity : ComponentActivity() {
                         ActiveChatActivity.navigateFrom(this@TitleActivity, assembleLogo = true)
                     },
                     onAbout = {
-                        Log.i(logTag, "About pressed (About screen not built yet)")
+                        Log.i(logTag, "About pressed")
                         AboutActivity.navigateFrom(this@TitleActivity)
                     },
                 )

@@ -31,7 +31,7 @@ import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
-import isel.pdm.droidmentor.ui.theme.modifiers.glassCard
+import isel.pdm.droidmentor.ui.theme.modifiers.frostedGlass
 
 const val THINKING_INDICATOR_TAG = "thinking_indicator"
 
@@ -58,7 +58,7 @@ fun ThinkingIndicator(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.width(8.dp))
         Row(
             modifier = Modifier
-                .glassCard(c, CircleShape)
+                .frostedGlass(c, CircleShape)
                 .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

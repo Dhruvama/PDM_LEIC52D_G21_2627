@@ -59,11 +59,14 @@ private fun DrawScope.drawGlowBlob(color: Color, x: Float, y: Float, r: Float) {
 }
 
 
-/** Translucent "glass" card with a subtle accent border.
+/** Neutral frosted glass: a fairly opaque surface fill with a subtle accent border.
+ * Quieter than [glass], which is tinted with the accents and has a sheen.
+ * The colors already follow the theme through [AppColors]. Except for bright mode where the border
+ * is tinted white to make the glass effect  // TODO(aaaaaaaaaaaaaaaaaaaaaaaaa)aaaaaaaaaaaaaaaa
  * @param c The app colors to use.
- * @param shape The shape of the card.
+ * @param shape The shape of the surface.
  */
-fun Modifier.glassCard(
+fun Modifier.frostedGlass(
     c: AppColors,
     shape: Shape = RoundedCornerShape(24.dp)
 ) = this
@@ -75,7 +78,9 @@ fun Modifier.glassCard(
     )
     .border(
         1.dp,
-        Brush.verticalGradient(listOf(c.border, c.borderSubtle)),
+        Brush.verticalGradient(
+           listOf(c.border, c.borderSubtle)
+        ),
         shape
     )
 
@@ -126,7 +131,10 @@ fun Modifier.glass(
         ),
         shape
     )
-
+    // TODO
+//Brush.verticalGradient(
+//listOf(c.border, c.borderSubtle)
+//), ver como fica na border UPPPPPPPPPPPP TODO
 @Preview
 @Composable
 fun GlowBackgroundDarkPreview() {
@@ -161,16 +169,32 @@ fun GlowBackgroundLightPreview() {
 
 @Preview
 @Composable
-fun GlassCardPreview() {
+fun FrostedGlassPreview() {
     DroidMentorTheme {
         Box(
             modifier = Modifier
                 .glowBackground(DefaultDarkColors)
                 .padding(16.dp)
-                .glassCard(DefaultDarkColors)
+                .frostedGlass(DefaultDarkColors)
                 .padding(32.dp)
         ) {
             Text("Glass Card Content", color = DefaultDarkColors.textPrimary)
+        }
+    }
+}
+
+@Preview
+@Composable
+fun FrostedGlassLightPreview() {
+    DroidMentorTheme(colors = DefaultLightColors) {
+        Box(
+            modifier = Modifier
+                .glowBackground(DefaultLightColors)
+                .padding(16.dp)
+                .frostedGlass(DefaultLightColors)
+                .padding(32.dp)
+        ) {
+            Text("Glass Card Content", color = DefaultLightColors.textPrimary)
         }
     }
 }

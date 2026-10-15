@@ -32,7 +32,7 @@ import isel.pdm.droidmentor.activechat.ChatMessage
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
-import isel.pdm.droidmentor.ui.theme.modifiers.glassCard
+import isel.pdm.droidmentor.ui.theme.modifiers.frostedGlass
 
 const val MENTOR_COPY_BUTTON_TAG = "mentor_copy_button"
 const val MENTOR_REGENERATE_BUTTON_TAG = "mentor_regenerate_button"
@@ -70,7 +70,7 @@ fun MentorMessageBubble(
         Column(
             modifier = Modifier
                 .widthIn(max = 300.dp)
-                .glassCard(
+                .frostedGlass(
                     c,
                     RoundedCornerShape(
                         topStart = 6.dp,

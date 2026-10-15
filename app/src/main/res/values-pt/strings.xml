@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Active Chat: message bubbles -->
+    <string name="user_message_edit_description">Editar mensagem</string>
+    <string name="user_message_attached_image">Imagem anexada</string>
+    <string name="mentor_message_copy">Copiar</string>
+    <string name="mentor_message_regenerate">Gerar novamente</string>
+
+    <!-- Active Chat: top bar -->
+    <string name="new_chat">Nova conversa</string>
+    <string name="chat_top_bar_back">Voltar</string>
+    <string name="chat_top_bar_options">Mais opções</string>
+
+    <!-- Active Chat: thinking indicator -->
+    <string name="thinking_indicator_text">O Mentor está a pensar…</string>
+
+    <!-- Active Chat: status banners -->
+    <string name="offline_banner_message">Estás offline. Podes ler esta conversa, mas as novas perguntas ficam em pausa até voltares a ligar-te.</string>
+    <string name="error_banner_retry">Tentar novamente</string>
+    <string name="error_banner_dismiss">Dispensar</string>
+
+    <!-- Active Chat: message list -->
+    <string name="welcome_good_morning">Bom dia!</string>
+    <string name="welcome_good_afternoon">Boa tarde!</string>
+    <string name="welcome_good_evening">Boa noite!</string>
+    <string name="welcome_question">O que vamos construir hoje?</string>
+    <string name="suggestion_review_viewmodel">Revê o meu ViewModel</string>
+    <string name="suggestion_explain_recomposition">Explica a recomposição</string>
+    <string name="suggestion_room_or_datastore">Room ou DataStore?</string>
+
+    <!-- Active Chat: composer -->
+    <string name="composer_placeholder">Pergunta sobre Android, Kotlin ou Compose…</string>
+    <string name="composer_placeholder_offline">Offline — liga-te para perguntar</string>
+    <string name="composer_attach">Anexar imagem</string>
+    <string name="composer_camera">Tirar fotografia</string>
+    <string name="composer_send">Enviar</string>
+
+    <!-- Active Chat: attachment preview -->
+    <string name="attachment_remove">Remover anexo</string>
+
+    <!-- Active Chat: code block -->
+    <string name="code_block_expand">Expandir código</string>
+    <string name="expanded_code_title">Código</string>
+    <string name="expanded_code_close">Fechar</string>
+
+    <!-- Title Screen -->
+    <string name="title_about_description">Sobre o DroidMentor</string>
+    <string name="title_headline">O teu mentor sénior de Android</string>
+    <string name="title_subtitle">Pergunta sobre Kotlin, Compose e arquitetura. As tuas conversas ficam neste telemóvel.</string>
+    <string name="title_start_chat">Iniciar uma conversa</string>
+    <string name="title_footnote">Usa a tua própria chave da API do Gemini</string>
+
+    <!-- About Screen -->
+    <string name="about_tip_1"> ↑ Psttt, carrega aqui em cima pá ↑ </string>
+    <string name="about_tip_2">Trabalho pesado não é na main thread: usa coroutines e Dispatchers.IO.</string>
+    <string name="about_tip_3">State hoisting: quem tem o estado decide, quem desenha só mostra.</string>
+    <string name="about_tip_4">Um composable deve ser idempotente e sem efeitos colaterais.</string>
+    <string name="about_tip_5">A tua API key é tua: nunca a ponhas no código nem no Git.</string>
+    <string name="about_tip_6">Põe Log.v nos callbacks do ciclo de vida para veres quando a Activity é recriada.</string>
+    <string name="about_tip_7">IMPORTANTE: Não te esqueças de jogar elden ring</string>
+    <string name="about_back_content_description">Voltar</string>
+    <string name="about_app_description">Um cliente LLM para Android que te ajuda a pensar como dev sénior Android, utilizando a API REST do Gemini.</string>
+    <string name="about_feature_byok_title">BYOK</string>
+    <string name="about_feature_byok_desc">Utiliza a tua chave do Gemini.</string>
+    <string name="about_feature_compose_title">Compose</string>
+    <string name="about_feature_compose_desc">Interface 100% Jetpack Compose, com temas à tua medida.</string>
+    <string name="about_feature_mentor_title">Mentor</string>
+    <string name="about_feature_mentor_desc">Respostas pensadas para ajudar no desenvolvimento Android.</string>
+    <string name="about_developers">Desenvolvedores</string>
+    <string name="about_course">Unidade curricular</string>
+    <string name="about_course_name">Programação em Dispositivos Móveis</string>
+    <string name="about_course_details">LEIC · ISEL · Semestre de inverno 2026/2027</string>
+    <string name="about_professors">Docentes</string>
+    <string name="about_github_button">Ver código no GitHub  ↗</string>
+    <string name="about_footer">Feito com ☕ e Kotlin no ISEL</string>
+    <string name="about_mascot_description">Mascote do DroidMentor. Toca para uma dica.</string>
+    <string name="about_header_subtitle">O teu mentor sénior de Android, no bolso.</string>
+
+    <!-- Modifiers & Components -->
+    <string name="type_a_message">Escreve uma mensagem...</string>
+    <string name="action_send">Enviar</string>
+
+    <!-- Color Picker -->
+    <string name="color_picker_hue">Matiz</string>
+    <string name="color_picker_saturation">Saturação</string>
+    <string name="color_picker_brightness">Brilho</string>
+
+    <!-- Chat History -->
+    <string name="chat_history_title">Histórico</string>
+    <string name="chat_history_new_chat">Nova conversa</string>
+    <string name="chat_history_empty_title">Começa a tua primeira conversa</string>
+    <string name="chat_history_empty_body">Pergunta sobre Android, Compose, arquitetura e muito mais.</string>
+    <string name="chat_history_search_hint">Pesquisar</string>
+    <string name="chat_history_clear_search">Limpar pesquisa</string>
+    <string name="chat_history_no_results">Sem resultados para \"%1$s\"</string>
+    <string name="chat_history_today">Hoje</string>
+    <string name="chat_history_chat_deleted">Conversa apagada</string>
+    <string name="chat_history_undo">Desfazer</string>
+    <string name="chat_history_delete">Apagar conversa %1$s</string>
+    <string name="chat_history_message_count_zero">0 mensagens</string>
+    <plurals name="chat_history_message_count">
+        <item quantity="one">%1$d mensagem</item>
+        <item quantity="many">%1$d mensagens</item>
+        <item quantity="other">%1$d mensagens</item>
+    </plurals>
+</resources>

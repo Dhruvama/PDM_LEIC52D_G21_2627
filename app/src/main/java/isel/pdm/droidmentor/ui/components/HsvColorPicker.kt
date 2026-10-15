@@ -15,7 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import isel.pdm.droidmentor.R
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
@@ -66,7 +68,7 @@ fun HsvColorPicker(
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         LabeledSlider(
-            label = "Matiz",
+            label = stringResource(R.string.color_picker_hue),
             value = hue,
             range = 0f..360f,
             gradient = (0..360 step 60).map { Color.hsv(it.toFloat(), 1f, 1f) },
@@ -74,7 +76,7 @@ fun HsvColorPicker(
             onValueChangeFinished = onColorChangeFinished,
         )
         LabeledSlider(
-            label = "Saturação",
+            label = stringResource(R.string.color_picker_saturation),
             value = sat,
             range = saturationRange,
             gradient = listOf(
@@ -85,7 +87,7 @@ fun HsvColorPicker(
             onValueChangeFinished = onColorChangeFinished,
         )
         LabeledSlider(
-            label = "Brilho",
+            label = stringResource(R.string.color_picker_brightness),
             value = value,
             range = valueRange,
             gradient = listOf(

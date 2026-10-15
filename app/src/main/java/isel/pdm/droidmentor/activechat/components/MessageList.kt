@@ -37,7 +37,7 @@ import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
-import isel.pdm.droidmentor.ui.theme.modifiers.glassCard
+import isel.pdm.droidmentor.ui.theme.modifiers.frostedGlass
 import java.util.Calendar
 
 const val MESSAGE_LIST_TAG = "message_list"
@@ -225,7 +225,7 @@ private fun WelcomeSuggestionChip(text: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .height(40.dp)
-            .glassCard(c, CircleShape)
+            .frostedGlass(c, CircleShape)
             .clickable(onClick = onClick)
             .semantics { role = Role.Button }
             .padding(horizontal = 14.dp)

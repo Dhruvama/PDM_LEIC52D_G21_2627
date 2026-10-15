@@ -17,6 +17,10 @@ private const val REPOSITORY_URL = "https://github.com/Dhruvama/PDM_LEIC52D_G21_
 class AboutActivity : ComponentActivity() {
     private val logTag = "AboutActivity"
     companion object {
+        /**
+         * Navigates to [AboutActivity].
+         * @param origin the activity that is currently showing, used to start this one.
+         */
         fun navigateFrom(origin: ComponentActivity){
             val msg = Intent(origin, AboutActivity::class.java)
             origin.startActivity(msg)
@@ -38,22 +42,6 @@ class AboutActivity : ComponentActivity() {
 
 
     }
-
-    override fun onStart() {
-        super.onStart()
-        Log.v(logTag, "onStart() on ${hashCode()}")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.v(logTag, "onStop() on ${hashCode()}")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.v(logTag, "onDestroy() on ${hashCode()}")
-    }
-
 
     private fun navigateToGitHub() {
         val intent = Intent(Intent.ACTION_VIEW, REPOSITORY_URL.toUri())

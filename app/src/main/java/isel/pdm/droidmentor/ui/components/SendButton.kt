@@ -12,12 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.ui.theme.AppColors
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
@@ -42,7 +44,7 @@ fun SendButton(
     modifier: Modifier = Modifier,
     diameter: Dp = 48.dp,
     isGlass: Boolean = false,
-    contentDescription: String = "Enviar",
+    contentDescription: String = stringResource(R.string.action_send),
 ) {
     val colors = LocalAppColors.current
     Box(

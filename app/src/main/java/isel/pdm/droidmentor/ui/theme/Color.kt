@@ -1,10 +1,9 @@
 package isel.pdm.droidmentor.ui.theme
 
-import android.graphics.Color.colorToHSV
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.toArgb
 import kotlin.math.max
 import kotlin.math.min
 
@@ -77,9 +76,30 @@ internal fun Color.vivid(extraSaturation: Float = 0.3f): Color {
     )
 }
 
-/** This color as [hue, saturation, value]. */
-internal fun Color.toHsv(): FloatArray =
-    FloatArray(3).also { colorToHSV(toArgb(), it) }
+/**
+ * This color as [hue, saturation, value].
+ * Written in plain Kotlin (instead of android.graphics.Color.colorToHSV)
+ * so it also runs in local unit tests on the JVM without mocking.
+ */
+internal fun Color.toHsv(): FloatArray {
+    val c = convert(ColorSpaces.Srgb)
+    val r = c.red
+    val g = c.green
+    val b = c.blue
+    val max = maxOf(r, g, b)
+    val delta = max - minOf(r, g, b)
+
+    var hue = when {
+        delta == 0f -> 0f
+        max == r -> 60f * (((g - b) / delta) % 6f)
+        max == g -> 60f * ((b - r) / delta + 2f)
+        else -> 60f * ((r - g) / delta + 4f)
+    }
+    if (hue < 0f) hue += 360f
+
+    val saturation = if (max == 0f) 0f else delta / max
+    return floatArrayOf(hue, saturation, max)
+}
 
 /**
  * Turns this color into a background for the given mode, keeping its hue.
@@ -88,12 +108,11 @@ internal fun Color.toHsv(): FloatArray =
  * @return The background color.
  */
 fun Color.toBackground(light: Boolean): Color {
-    val hsv = FloatArray(3)
-    colorToHSV(toArgb(), hsv)
+    val hsv = this.toHsv()
     return Color.hsv(
         hsv[0],
         hsv[1].coerceIn(BackgroundLimits.saturation(light)),
-        if (light) 0.97f else 0.04f
+        BackgroundLimits.defaultValue(light)
     )
 }
 
