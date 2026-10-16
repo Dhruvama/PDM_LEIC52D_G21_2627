@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
@@ -119,8 +118,8 @@ private const val VISIBILITY = 3
 
 /**
  * The About screen's mascot made of glowing dots, in the style of the particle logo:
- * the Android head (with antennae that sway and eyes that blink) floats over a pulsing
- * glow, then scatters into a swirl and gathers back into the head. When the screen opens,
+ * the Android head (with antennae that sway and eyes that blink) floats, then scatters
+ * into a swirl and gathers back into the head. When the screen opens,
  * the dots gather into the head.
  *
  * Tapping it scatters the head into the swirl, calls [onClick] while it is scattered and
@@ -222,7 +221,6 @@ fun ParticleDroid(
             from = from,
             to = to,
             sprites = sprites,
-            glowColor = c.accent,
             shadowColor = c.textPrimary,
             additive = additive,
         )
@@ -290,7 +288,7 @@ private class DroidSeeds {
 }
 
 /**
- * Draws the glow, the shadow and every dot [elapsed] seconds after the mascot appeared,
+ * Draws the shadow and every dot [elapsed] seconds after the mascot appeared,
  * with the dots [scatter] of the way from the droid (0) to the swirl (1).
  */
 private fun DrawScope.drawDroid(
@@ -300,7 +298,6 @@ private fun DrawScope.drawDroid(
     from: FloatArray,
     to: FloatArray,
     sprites: DroidSprites,
-    glowColor: Color,
     shadowColor: Color,
     additive: Boolean,
 ) {
@@ -309,17 +306,8 @@ private fun DrawScope.drawDroid(
     val droidAmount = 1f - easeInOutCubic(scatter.coerceIn(0f, 1f))
 
     val floatOffset = sin(elapsed * 2f * PI.toFloat() / FLOAT_PERIOD_SECONDS) * FLOAT_AMOUNT
-    val pulse = 0.85f + 0.15f * sin(elapsed * 2f * PI.toFloat() / 4.8f)
     val eyeOpen = eyeOpenness(elapsed)
 
-    // Glow behind
-    drawCircle(
-        Brush.radialGradient(
-            listOf(glowColor.copy(alpha = 0.3f * pulse), Color.Transparent),
-            center = center,
-            radius = logoRadius
-        )
-    )
     // Shadow on the "floor", smaller when the head is higher
     val shadowWidth = size.width * (0.42f - floatOffset * 1.3f)
     drawOval(
