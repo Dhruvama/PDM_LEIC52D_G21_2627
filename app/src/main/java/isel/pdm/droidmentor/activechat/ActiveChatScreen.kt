@@ -56,41 +56,43 @@ private val logTag = buildLogTag("ActiveChatScreen")
 fun ActiveChatScreen(viewModel: ActiveChatScreenViewModel, assembleLogo: Boolean, onBack: () -> Unit) {
     val clipboard = LocalClipboardManager.current
     // The content handles the insets and draws its own background.
-    Scaffold(containerColor = Color.Transparent, contentWindowInsets = WindowInsets(0)) { _ ->
-        ActiveChatScreenContent(
-            state = viewModel.state,
-            assembleLogo = assembleLogo,
-            onBackClick = onBack,
-            onOptionsClick = {
-                Log.v(logTag, "Options clicked")
-                // TODO: options menu
-            },
-            onInputChange = { viewModel.updateInput(it) },
-            onAttachClick = {
-                Log.v(logTag, "Attach clicked")
-                // TODO (phase E): pick an image from the gallery
-            },
-            onCameraClick = {
-                Log.v(logTag, "Camera clicked")
-                // TODO (phase E): take a photo
-            },
-            onRemoveAttachment = { viewModel.removeAttachedImage() },
-            onSendClick = { viewModel.send() },
-            onEditMessage = {
-                Log.v(logTag, "Edit message ${it.id} clicked")
-                // TODO (phase D): edit the message
-            },
-            onCopyMessage = { clipboard.setText(AnnotatedString(it.text)) },
-            onRegenerateMessage = {
-                Log.v(logTag, "Regenerate message ${it.id} clicked")
-                // TODO (phase D): regenerate the reply
-            },
-            onRetryClick = {
-                Log.v(logTag, "Retry clicked")
-                // TODO (phase C): retry the request to Gemini
-            },
-            onDismissError = { viewModel.dismissError() },
-        )
+    Scaffold(containerColor = Color.Transparent, contentWindowInsets = WindowInsets(0)) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            ActiveChatScreenContent(
+                state = viewModel.state,
+                assembleLogo = assembleLogo,
+                onBackClick = onBack,
+                onOptionsClick = {
+                    Log.v(logTag, "Options clicked")
+                    // TODO: options menu
+                },
+                onInputChange = { viewModel.updateInput(it) },
+                onAttachClick = {
+                    Log.v(logTag, "Attach clicked")
+                    // TODO (phase E): pick an image from the gallery
+                },
+                onCameraClick = {
+                    Log.v(logTag, "Camera clicked")
+                    // TODO (phase E): take a photo
+                },
+                onRemoveAttachment = { viewModel.removeAttachedImage() },
+                onSendClick = { viewModel.send() },
+                onEditMessage = {
+                    Log.v(logTag, "Edit message ${it.id} clicked")
+                    // TODO (phase D): edit the message
+                },
+                onCopyMessage = { clipboard.setText(AnnotatedString(it.text)) },
+                onRegenerateMessage = {
+                    Log.v(logTag, "Regenerate message ${it.id} clicked")
+                    // TODO (phase D): regenerate the reply
+                },
+                onRetryClick = {
+                    Log.v(logTag, "Retry clicked")
+                    // TODO (phase C): retry the request to Gemini
+                },
+                onDismissError = { viewModel.dismissError() },
+            )
+        }
     }
 }
 
@@ -172,7 +174,7 @@ private fun ActiveChatScreenContent(
                 onTextChange = onInputChange,
                 attachedImage = state.attachedImage,
                 onRemoveAttachment = onRemoveAttachment,
-                isInputEnabled = state.status !is ChatStatus.Waiting && !state.isOffline,
+                isInputEnabled = !state.isOffline,
                 isSendEnabled = state.canSend,
                 onAttachClick = onAttachClick,
                 onCameraClick = onCameraClick,

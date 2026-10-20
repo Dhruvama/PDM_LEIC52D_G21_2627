@@ -59,9 +59,10 @@ const val SEND_BUTTON_TAG = "send_button"
  * @param attachedImage Image attached and not yet sent, shown as a thumbnail above the text field,
  * or `null` if there is none.
  * @param onRemoveAttachment Called when the user taps the thumbnail's remove button.
- * @param isInputEnabled `false` when offline or waiting for a reply; disables the text field,
- * attach and camera buttons, and shows the offline placeholder.
- * @param isSendEnabled Whether the send button can be tapped. Computed by the caller.
+ * @param isInputEnabled `false` when offline; disables the text field, attach and camera buttons,
+ * and shows the offline placeholder. Stays `true` while waiting for a reply.
+ * @param isSendEnabled Whether the send button can be tapped. Computed by the caller; `false`
+ * while waiting for a reply.
  * @param onAttachClick Called when the user taps the attach button.
  * @param onCameraClick Called when the user taps the camera button.
  * @param onSendClick Called when the user taps the send button.
