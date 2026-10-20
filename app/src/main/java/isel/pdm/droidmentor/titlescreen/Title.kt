@@ -3,7 +3,6 @@ package isel.pdm.droidmentor.titlescreen
 import android.content.Context
 import android.content.res.Configuration
 import android.provider.Settings
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,8 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -58,10 +55,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
+import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
+import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
+import isel.pdm.droidmentor.ui.theme.LocalAppColors
+import isel.pdm.droidmentor.ui.theme.modifiers.frostedGlass
+import isel.pdm.droidmentor.ui.theme.modifiers.glass
+import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
 import isel.pdm.droidmentor.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.Settings
 
 /** Test tag of the "Start a chat" button. */
 const val START_CHAT_BUTTON_TAG = "start_chat_button"
@@ -97,13 +101,12 @@ private val CHAT_COMPOSER_FIXED_HEIGHT = 106.dp
  * @param onStartChat called when the user starts a chat, after the dots have scattered
  * (immediately if the system has animations turned off).
  * @param onAbout called when the user presses the About button.
- * @param background brush painted behind the whole screen. Defaults to the theme background.
  */
 @Composable
 fun TitleScreen(
     onStartChat: () -> Unit,
+    onSettings: () -> Unit,
     onAbout: () -> Unit,
-    background: Brush = SolidColor(MaterialTheme.colorScheme.background),
 ) {
     var gathered by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
@@ -132,9 +135,10 @@ fun TitleScreen(
             }
         },
         onAbout = onAbout,
-        background = background,
+        onSettings
     )
 }
+
 
 private fun isReducedMotion(context: Context): Boolean =
     Settings.Global.getFloat(
@@ -153,14 +157,14 @@ private fun TitleScreenContent(
     gathered: Boolean,
     onStartChatClick: () -> Unit,
     onAbout: () -> Unit,
-    background: Brush,
+    onSettings: () -> Unit
 ) {
     val isLandscape =
         LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     if (isLandscape) {
-        TitleLandscape(gathered, onStartChatClick, onAbout, background)
+        TitleLandscape(gathered, onStartChatClick, onAbout, onSettings)
     } else {
-        TitlePortrait(gathered, onStartChatClick, onAbout, background)
+        TitlePortrait(gathered, onStartChatClick, onAbout, onSettings)
     }
 }
 
@@ -169,7 +173,7 @@ private fun TitlePortrait(
     gathered: Boolean,
     onStartChatClick: () -> Unit,
     onAbout: () -> Unit,
-    background: Brush,
+    onSettings: () -> Unit,
 ) {
     val composerHeight = with(LocalDensity.current) {
         MaterialTheme.typography.bodyLarge.lineHeight.toDp()
@@ -178,7 +182,7 @@ private fun TitlePortrait(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(background),
+            .glowBackground(LocalAppColors.current),
     ) {
         // The space the chat leaves between its top bar and its composer, where it centers its logo.
         Box(
@@ -196,7 +200,7 @@ private fun TitlePortrait(
                 .fillMaxSize()
                 .systemBarsPadding(),
         ) {
-            TitleTopRow(onAbout = onAbout)
+            TitleTopRow(onAbout = onAbout, onSettings = onSettings)
             Spacer(Modifier.weight(1f))
             Column(
                 modifier = Modifier
@@ -249,7 +253,7 @@ private fun ChatAlignedBust(gathered: Boolean) {
 private fun ChatWelcomeSpace() {
     // Every greeting fits in one line, so the longest one gives the same height.
     val greeting = stringResource(R.string.welcome_good_afternoon) + "\n" +
-        stringResource(R.string.welcome_question)
+            stringResource(R.string.welcome_question)
     val suggestions = listOf(
         stringResource(R.string.suggestion_review_viewmodel),
         stringResource(R.string.suggestion_explain_recomposition),
@@ -291,15 +295,15 @@ private fun TitleLandscape(
     gathered: Boolean,
     onStartChatClick: () -> Unit,
     onAbout: () -> Unit,
-    background: Brush,
+    onSettings: () -> Unit,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(background)
+            .glowBackground(LocalAppColors.current)
             .systemBarsPadding(),
     ) {
-        TitleTopRow(onAbout = onAbout)
+        TitleTopRow(onAbout = onAbout, onSettings = onSettings)
 
         Row(
             modifier = Modifier
@@ -339,7 +343,7 @@ private fun TitleLandscape(
 
 /** App name on the left, About button on the right. */
 @Composable
-private fun TitleTopRow(onAbout: () -> Unit) {
+private fun TitleTopRow(onAbout: () -> Unit, onSettings: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -348,38 +352,38 @@ private fun TitleTopRow(onAbout: () -> Unit) {
     ) {
         AppName()
         Spacer(Modifier.weight(1f))
+        SettingsButton(onClick = onSettings)
         AboutButton(onClick = onAbout)
     }
 }
 
-/** "DroidMentor" where "Mentor" is highlighted with the primary color. */
+/** "DroidMentor" where "Mentor" is highlighted with the accent gradient. */
 @Composable
 private fun AppName() {
+    val c = LocalAppColors.current
     // stringResource is composable, so the strings are read before building the text.
     val first = stringResource(R.string.title_app_name_first)
     val second = stringResource(R.string.title_app_name_second)
-    val highlight = MaterialTheme.colorScheme.primary
     val name = buildAnnotatedString {
         append(first)
-        withStyle(SpanStyle(color = highlight)) { append(second) }
+        withStyle(SpanStyle(brush = c.crossGradient)) { append(second) }
     }
     Text(
         text = name,
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onBackground,
+        color = c.textPrimary,
     )
 }
 
-/** 44 dp circular button with an info icon. */
+/** 44 dp circular frosted glass button with an info icon. */
 @Composable
 private fun AboutButton(onClick: () -> Unit) {
+    val c = LocalAppColors.current
     Box(
         modifier = Modifier
             .size(44.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surface)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+            .frostedGlass(c, CircleShape)
             .clickable(onClick = onClick)
             .semantics { role = Role.Button }
             .testTag(ABOUT_BUTTON_TAG),
@@ -388,7 +392,27 @@ private fun AboutButton(onClick: () -> Unit) {
         Icon(
             imageVector = Icons.Default.Info,
             contentDescription = stringResource(R.string.title_about_description),
-            tint = MaterialTheme.colorScheme.onSurface,
+            tint = c.textPrimary,
+        )
+    }
+}
+
+/** 44 dp circular frosted glass button with a settings (gear) icon. */
+@Composable
+private fun SettingsButton(onClick: () -> Unit) {
+    val c = LocalAppColors.current
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .frostedGlass(c, CircleShape)
+            .clickable(onClick = onClick)
+            .semantics { role = Role.Button },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Settings,
+            contentDescription = stringResource(R.string.title_activity_settings),
+            tint = c.textPrimary,
         )
     }
 }
@@ -399,7 +423,7 @@ private fun TitleHeadline() {
         text = stringResource(R.string.title_headline),
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onBackground,
+        color = LocalAppColors.current.textPrimary,
         textAlign = TextAlign.Center,
     )
 }
@@ -409,22 +433,21 @@ private fun TitleSubtitle() {
     Text(
         text = stringResource(R.string.title_subtitle),
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = LocalAppColors.current.textSecondary,
         textAlign = TextAlign.Center,
         modifier = Modifier.widthIn(max = 280.dp),
     )
 }
 
-/** Pill-shaped gradient button. The caller decides its width. */
+/** Pill-shaped glass button with an accent halo. The caller decides its width. */
 @Composable
 private fun StartChatButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
-    val brush = Brush.linearGradient(listOf(colors.tertiary, colors.primary))
+    val c = LocalAppColors.current
     Box(
         modifier = modifier
             .height(58.dp)
-            .clip(CircleShape)
-            .background(brush)
+            .frostedGlass(c, CircleShape)
+            .glass(c, CircleShape)
             .clickable(onClick = onClick)
             .semantics { role = Role.Button }
             .testTag(START_CHAT_BUTTON_TAG),
@@ -437,13 +460,12 @@ private fun StartChatButton(onClick: () -> Unit, modifier: Modifier = Modifier) 
             Text(
                 text = stringResource(R.string.title_start_chat),
                 style = MaterialTheme.typography.titleMedium,
-                color = colors.onPrimary,
+                color = c.accent,
             )
-            // Decorative: the button text already says what it does.
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
-                tint = colors.onPrimary,
+                tint = c.accent,
             )
         }
     }
@@ -454,7 +476,7 @@ private fun TitleFootnote() {
     Text(
         text = stringResource(R.string.title_footnote),
         style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = LocalAppColors.current.textSecondary,
         textAlign = TextAlign.Center,
     )
 }
@@ -463,9 +485,19 @@ private fun TitleFootnote() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 600)
 @Composable
-private fun ChatAlignedBustPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        Box(contentAlignment = Alignment.Center) {
+private fun ChatAlignedBustDarkPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current), contentAlignment = Alignment.Center) {
+            ChatAlignedBust(gathered = true)
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 600)
+@Composable
+private fun ChatAlignedBustLightPreview() {
+    DroidMentorTheme(colors = DefaultLightColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current), contentAlignment = Alignment.Center) {
             ChatAlignedBust(gathered = true)
         }
     }
@@ -474,9 +506,9 @@ private fun ChatAlignedBustPreview() {
 @Preview(showBackground = true, widthDp = 360)
 @Composable
 private fun ChatWelcomeSpacePreview() {
-    DroidMentorTheme(dynamicColor = false) {
+    DroidMentorTheme(colors = DefaultDarkColors) {
         // Draws nothing on purpose: the border shows the space it takes.
-        Box(Modifier.border(1.dp, MaterialTheme.colorScheme.outline)) {
+        Box(Modifier.border(1.dp, LocalAppColors.current.border)) {
             ChatWelcomeSpace()
         }
     }
@@ -484,30 +516,32 @@ private fun ChatWelcomeSpacePreview() {
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 740)
 @Composable
-private fun TitleScreenPortraitPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        TitleScreen(onStartChat = {}, onAbout = {})
-    }
-}
-
-@Preview(showBackground = true, widthDp = 740, heightDp = 360)
-@Composable
-private fun TitleScreenLandscapePreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        TitleScreen(onStartChat = {}, onAbout = {})
+private fun TitleScreenPortraitDarkPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        TitleScreen(onStartChat = {}, onSettings = {},onAbout = {})
     }
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 740)
 @Composable
-private fun TitleScreenGradientPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        TitleScreen(
-            onStartChat = {},
-            onAbout = {},
-            background = Brush.verticalGradient(
-                listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
-            ),
-        )
+private fun TitleScreenPortraitLightPreview() {
+    DroidMentorTheme(colors = DefaultLightColors) {
+        TitleScreen(onStartChat = {}, onSettings = {},onAbout = {})
+    }
+}
+
+@Preview(showBackground = true, widthDp = 740, heightDp = 360)
+@Composable
+private fun TitleScreenLandscapeDarkPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        TitleScreen(onStartChat = {}, onSettings = {},onAbout = {})
+    }
+}
+
+@Preview(showBackground = true, widthDp = 740, heightDp = 360)
+@Composable
+private fun TitleScreenLandscapeLightPreview() {
+    DroidMentorTheme(colors = DefaultLightColors) {
+        TitleScreen(onStartChat = {}, onSettings = {},onAbout = {})
     }
 }

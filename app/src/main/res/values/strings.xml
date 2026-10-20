@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name" translatable="false">DroidMentor</string>
 
+    <string name="title_activity_about">AboutActivity</string>
+    <string name="title_activity_settings">Definições</string>
+
     <!-- Active Chat: message bubbles -->
     <string name="user_message_edit_description">Edit message</string>
     <string name="user_message_attached_image">Attached image</string>

@@ -8,7 +8,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import isel.pdm.droidmentor.about.AboutActivity
 import isel.pdm.droidmentor.activechat.ActiveChatActivity
+import isel.pdm.droidmentor.settings.SettingsActivity
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
+import isel.pdm.droidmentor.settings.AppColorsStore
 
 // No shared Logging.kt was visible to me, so the tag is defined locally.
 private val logTag = "DroidMentor.TitleActivity"
@@ -33,15 +35,21 @@ class TitleActivity : ComponentActivity() {
         Log.v(logTag, "onCreate")
         enableEdgeToEdge()
         setContent {
-            DroidMentorTheme {
+            DroidMentorTheme(colors = AppColorsStore.current) {
                 TitleScreen(
                     onStartChat = {
-                        ActiveChatActivity.navigateFrom(this@TitleActivity, assembleLogo = true)
+                        ActiveChatActivity.navigateFrom(
+                            origin = this@TitleActivity,
+                            assembleLogo = true // Inicia a animação das partículas
+                        )
                     },
                     onAbout = {
-                        Log.i(logTag, "About pressed")
+                        Log.i(logTag, "About pressed (About screen not built yet)")
                         AboutActivity.navigateFrom(this@TitleActivity)
                     },
+                    onSettings = {
+                        SettingsActivity.navigateFrom(this@TitleActivity)
+                    }
                 )
             }
         }

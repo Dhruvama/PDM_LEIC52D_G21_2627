@@ -49,6 +49,13 @@
             android:theme="@style/Theme.DroidMentor"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Ecrã de Settings (SettingsActivity) -->
+        <activity
+            android:name=".settings.SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DroidMentor"
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 
 </manifest>
