@@ -50,7 +50,7 @@ const val OPTIONS_BUTTON_TAG = "options_button"
  * @param modifier Modifier applied to the bar.
  */
 @Composable
-fun ChatTopBar(
+fun ChatTopBarComponent(
     title: String,
     onBackClick: () -> Unit,
     onOptionsClick: () -> Unit,
@@ -64,7 +64,7 @@ fun ChatTopBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        RoundIconButton(
+        ComponentRoundIconButton(
             icon = Icons.AutoMirrored.Filled.ArrowBack,
             contentDescription = stringResource(R.string.chat_top_bar_back),
             onClick = onBackClick,
@@ -74,9 +74,9 @@ fun ChatTopBar(
             modifier = Modifier.weight(1f),
             contentAlignment = Alignment.CenterStart,
         ) {
-            TitlePill(title = title)
+            ComponentTitlePill(title = title)
         }
-        RoundIconButton(
+        ComponentRoundIconButton(
             icon = Icons.Default.MoreVert,
             contentDescription = stringResource(R.string.chat_top_bar_options),
             onClick = onOptionsClick,
@@ -89,17 +89,17 @@ fun ChatTopBar(
  * A 44.dp round glass button.
  */
 @Composable
-private fun RoundIconButton(
+private fun ComponentRoundIconButton(
     icon: ImageVector,
     contentDescription: String,
     onClick: () -> Unit,
     testTag: String,
 ) {
-    val c = LocalAppColors.current
+    val colors = LocalAppColors.current
     Box(
         modifier = Modifier
             .size(44.dp)
-            .frostedGlass(c, CircleShape),
+            .frostedGlass(colors, CircleShape),
     ) {
         IconButton(
             onClick = onClick,
@@ -110,7 +110,7 @@ private fun RoundIconButton(
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-                tint = c.textPrimary,
+                tint = colors.textPrimary,
             )
         }
     }
@@ -120,21 +120,21 @@ private fun RoundIconButton(
  * Glass pill with the mentor's avatar and the chat title in one line. Not clickable.
  */
 @Composable
-private fun TitlePill(title: String, modifier: Modifier = Modifier) {
-    val c = LocalAppColors.current
+private fun ComponentTitlePill(title: String, modifier: Modifier = Modifier) {
+    val colors = LocalAppColors.current
     Row(
         modifier = modifier
             .height(44.dp)
-            .frostedGlass(c, CircleShape)
+            .frostedGlass(colors, CircleShape)
             .padding(start = 6.dp, end = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MentorAvatar()
+        MentorAvatarComponent()
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,
-            color = c.textPrimary,
+            color = colors.textPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -145,9 +145,9 @@ private fun TitlePill(title: String, modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-private fun ChatTopBarShortTitlePreview() {
+private fun ChatTopBarComponentShortTitlePreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        ChatTopBar(
+        ChatTopBarComponent(
             title = previewShortTitle,
             onBackClick = { },
             onOptionsClick = { },
@@ -157,9 +157,9 @@ private fun ChatTopBarShortTitlePreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun ChatTopBarLongTitlePreview() {
+private fun ChatTopBarComponentLongTitlePreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        ChatTopBar(
+        ChatTopBarComponent(
             title = previewLongTitle,
             onBackClick = { },
             onOptionsClick = { },
@@ -169,9 +169,9 @@ private fun ChatTopBarLongTitlePreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun RoundIconButtonPreview() {
+private fun ComponentRoundIconButtonPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        RoundIconButton(
+        ComponentRoundIconButton(
             icon = Icons.AutoMirrored.Filled.ArrowBack,
             contentDescription = stringResource(R.string.chat_top_bar_back),
             onClick = { },
@@ -182,9 +182,9 @@ private fun RoundIconButtonPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun TitlePillPreview() {
+private fun ComponentTitlePillPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        TitlePill(title = previewShortTitle)
+        ComponentTitlePill(title = previewShortTitle)
     }
 }
 

@@ -27,12 +27,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.buildLogTag
-import isel.pdm.droidmentor.activechat.components.ChatComposer
-import isel.pdm.droidmentor.activechat.components.ChatTopBar
-import isel.pdm.droidmentor.activechat.components.ErrorBanner
-import isel.pdm.droidmentor.activechat.components.MessageList
-import isel.pdm.droidmentor.activechat.components.OfflineBanner
-import isel.pdm.droidmentor.activechat.components.ParticleLogoColors
+import isel.pdm.droidmentor.activechat.components.ChatInputComponent
+import isel.pdm.droidmentor.activechat.components.ChatTopBarComponent
+import isel.pdm.droidmentor.activechat.components.ErrorBannerComponent
+import isel.pdm.droidmentor.activechat.components.MessageListComponent
+import isel.pdm.droidmentor.activechat.components.OfflineBannerComponent
+import isel.pdm.droidmentor.activechat.components.particlelogo.ParticleLogoColors
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
@@ -104,7 +104,7 @@ fun ActiveChatScreen(viewModel: ActiveChatScreenViewModel, assembleLogo: Boolean
  * @param onBackClick Called when the user taps the back button.
  * @param onOptionsClick Called when the user taps the options button.
  * @param onInputChange Called with the new text whenever the user types.
- * @param onAttachClick Called when the user taps the attach button.
+ * @param onAttachClick Called when the user taps the attachment button.
  * @param onCameraClick Called when the user taps the camera button.
  * @param onRemoveAttachment Called when the user removes the attached image.
  * @param onSendClick Called when the user taps the send button.
@@ -143,22 +143,22 @@ private fun ActiveChatScreenContent(
             .testTag(ACTIVE_CHAT_SCREEN_TAG),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            ChatTopBar(
+            ChatTopBarComponent(
                 title = state.chatTitle ?: stringResource(R.string.new_chat),
                 onBackClick = onBackClick,
                 onOptionsClick = onOptionsClick,
             )
             if (state.isOffline) {
-                OfflineBanner()
+                OfflineBannerComponent()
             }
             if (state.status is ChatStatus.Failed) {
-                ErrorBanner(
+                ErrorBannerComponent(
                     message = failureText(state.status.reason),
                     onRetryClick = onRetryClick,
                     onDismissClick = onDismissError,
                 )
             }
-            MessageList(
+            MessageListComponent(
                 messages = state.messages,
                 isWaitingForReply = state.status is ChatStatus.Waiting,
                 onEditMessage = onEditMessage,
@@ -169,7 +169,7 @@ private fun ActiveChatScreenContent(
                 logoColors = logoColors,
                 modifier = Modifier.weight(1f),
             )
-            ChatComposer(
+            ChatInputComponent(
                 text = state.inputText,
                 onTextChange = onInputChange,
                 attachedImage = state.attachedImage,

@@ -15,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -23,7 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
-import isel.pdm.droidmentor.activechat.components.ParticleLogo
+import isel.pdm.droidmentor.activechat.components.particlelogo.ParticleLogoComponent
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
@@ -50,7 +49,7 @@ fun EmptyHistory(onNewChatClick: () -> Unit, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
     ) {
-        ParticleLogo(size = 180.dp, glow = !c.isLight)
+        ParticleLogoComponent(size = 180.dp, glow = !c.isLight)
         Text(
             stringResource(R.string.chat_history_empty_title),
             color = c.textPrimary,

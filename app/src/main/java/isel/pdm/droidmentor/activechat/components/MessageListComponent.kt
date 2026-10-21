@@ -33,11 +33,14 @@ import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.activechat.Author
 import isel.pdm.droidmentor.activechat.ChatMessage
+import isel.pdm.droidmentor.activechat.components.particlelogo.ParticleLogoColors
+import isel.pdm.droidmentor.activechat.components.particlelogo.ParticleLogoComponent
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
 import isel.pdm.droidmentor.ui.theme.modifiers.frostedGlass
+import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
 import java.util.Calendar
 
 const val MESSAGE_LIST_TAG = "message_list"
@@ -48,7 +51,7 @@ const val SUGGESTION_CHIP_TAG = "suggestion_chip"
  * The scrollable list of messages of the Active Chat screen.
  *
  * Shows a welcome with suggestions instead of the list when there are no messages
- * and no reply is pending. While a reply is pending, a [ThinkingIndicator] is shown
+ * and no reply is pending. While a reply is pending, a [ThinkingIndicatorComponent] is shown
  * after the last message. Scrolls to the bottom whenever a message is added or the
  * thinking indicator appears or disappears.
  *
@@ -59,20 +62,64 @@ const val SUGGESTION_CHIP_TAG = "suggestion_chip"
  * @param onRegenerateMessage Called with the mentor's message whose "Regenerate" button was tapped.
  * @param onSuggestionClick Called with the text of the tapped suggestion, to fill the input with it.
  * @param assembleLogo `true` to make the welcome's logo gather from the Title screen's cloud
- * (entry transition). See [ParticleLogo].
+ * (entry transition). See [isel.pdm.droidmentor.activechat.components.particlelogo.ParticleLogoComponent].
  * @param logoColors Colors of the welcome's logo chosen by the user, or `null` to use the theme.
  * @param modifier Modifier applied to the list (or to the welcome's container when empty).
  */
 @Composable
-fun MessageList(
+fun MessageListComponent(
     messages: List<ChatMessage>,
     isWaitingForReply: Boolean,
     onEditMessage: (ChatMessage) -> Unit,
     onCopyMessage: (ChatMessage) -> Unit,
     onRegenerateMessage: (ChatMessage) -> Unit,
     onSuggestionClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
     assembleLogo: Boolean = false,
     logoColors: ParticleLogoColors? = null,
+) {
+    if (messages.isEmpty() && !isWaitingForReply) {
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            ComponentEmptyChatWelcome(
+                onSuggestionClick = onSuggestionClick,
+                assembleLogo = assembleLogo,
+                logoColors = logoColors,
+            )
+        }
+    } else {
+        ComponentMessages(
+            messages = messages,
+            isWaitingForReply = isWaitingForReply,
+            onEditMessage = onEditMessage,
+            onCopyMessage = onCopyMessage,
+            onRegenerateMessage = onRegenerateMessage,
+            modifier = modifier,
+        )
+    }
+}
+
+/**
+ * The messages themselves, followed by a [ThinkingIndicatorComponent] while a reply is pending.
+ * Scrolls to the bottom whenever a message is added or the thinking indicator
+ * appears or disappears.
+ *
+ * @param messages Messages to show, oldest first.
+ * @param isWaitingForReply `true` while the mentor's reply is pending.
+ * @param onEditMessage Called with the user's message whose "Edit" button was tapped.
+ * @param onCopyMessage Called with the mentor's message whose "Copy" button was tapped.
+ * @param onRegenerateMessage Called with the mentor's message whose "Regenerate" button was tapped.
+ * @param modifier Modifier applied to the list.
+ */
+@Composable
+private fun ComponentMessages(
+    messages: List<ChatMessage>,
+    isWaitingForReply: Boolean,
+    onEditMessage: (ChatMessage) -> Unit,
+    onCopyMessage: (ChatMessage) -> Unit,
+    onRegenerateMessage: (ChatMessage) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
@@ -85,43 +132,30 @@ fun MessageList(
         }
     }
 
-    if (messages.isEmpty() && !isWaitingForReply) {
-        Box(
-            modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            EmptyChatWelcome(
-                onSuggestionClick = onSuggestionClick,
-                assembleLogo = assembleLogo,
-                logoColors = logoColors,
-            )
-        }
-    } else {
-        LazyColumn(
-            state = listState,
-            modifier = modifier.testTag(MESSAGE_LIST_TAG),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            items(messages, key = { it.id }, contentType = { it.author }) { message ->
-                when (message.author) {
-                    Author.USER -> UserMessageBubble(
-                        message = message,
-                        onEditClick = { onEditMessage(message) },
-                    )
-                    Author.MENTOR -> MentorMessageBubble(
-                        message = message,
-                        onCopyClick = { onCopyMessage(message) },
-                        onRegenerateClick = { onRegenerateMessage(message) },
-                        // TODO: true for the message being streamed, once Gemini streaming exists
-                        isAvatarAnimated = false,
-                    )
-                }
+    LazyColumn(
+        state = listState,
+        modifier = modifier.testTag(MESSAGE_LIST_TAG),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(messages, key = { it.id }, contentType = { it.author }) { message ->
+            when (message.author) {
+                Author.USER -> UserMessageBubbleComponent(
+                    message = message,
+                    onEditClick = { onEditMessage(message) },
+                )
+                Author.MENTOR -> MentorMessageBubbleComponent(
+                    message = message,
+                    onCopyClick = { onCopyMessage(message) },
+                    onRegenerateClick = { onRegenerateMessage(message) },
+                    // TODO: true for the message being streamed, once Gemini streaming exists
+                    isAvatarAnimated = false,
+                )
             }
-            if (isWaitingForReply) {
-                item(key = "thinking") {
-                    ThinkingIndicator()
-                }
+        }
+        if (isWaitingForReply) {
+            item(key = "thinking") {
+                ThinkingIndicatorComponent()
             }
         }
     }
@@ -133,13 +167,13 @@ fun MessageList(
  * Nothing here clips, so the logo's entry cloud can draw outside the logo's bounds.
  */
 @Composable
-private fun EmptyChatWelcome(
+private fun ComponentEmptyChatWelcome(
     onSuggestionClick: (String) -> Unit,
     assembleLogo: Boolean = false,
     logoColors: ParticleLogoColors? = null,
 ) {
-    val c = LocalAppColors.current
-    // In landscape a bigger logo pushes the suggestions off screen.
+    val colors = LocalAppColors.current
+    // In landscape a bigger logo pushes the suggestions off-screen.
     val logoSize = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) {
         150.dp
     } else {
@@ -152,14 +186,14 @@ private fun EmptyChatWelcome(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(22.dp),
     ) {
-        ParticleLogo(
+        ParticleLogoComponent(
             size = logoSize,
-            glow = !c.isLight,
+            glow = !colors.isLight,
             logoColors = logoColors,
             assembleOnStart = assembleLogo,
         )
-        WelcomeGreeting()
-        SuggestionChips(onSuggestionClick = onSuggestionClick)
+        ComponentWelcomeGreeting()
+        ComponentSuggestionChips(onSuggestionClick = onSuggestionClick)
     }
 }
 
@@ -167,8 +201,8 @@ private fun EmptyChatWelcome(
  * "Good morning/afternoon/evening!" depending on the hour, followed by the welcome question.
  */
 @Composable
-private fun WelcomeGreeting() {
-    val c = LocalAppColors.current
+private fun ComponentWelcomeGreeting() {
+    val colors = LocalAppColors.current
     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     val timeGreeting = if (hour in 5..11) {
         stringResource(R.string.welcome_good_morning)
@@ -183,7 +217,7 @@ private fun WelcomeGreeting() {
         text = timeGreeting + "\n" + question,
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.SemiBold,
-        color = c.textPrimary,
+        color = colors.textPrimary,
         textAlign = TextAlign.Center,
     )
 }
@@ -192,7 +226,7 @@ private fun WelcomeGreeting() {
  * The three suggestions, centered and wrapping to a new line when they do not fit.
  */
 @Composable
-private fun SuggestionChips(onSuggestionClick: (String) -> Unit) {
+private fun ComponentSuggestionChips(onSuggestionClick: (String) -> Unit) {
     val reviewViewModel = stringResource(R.string.suggestion_review_viewmodel)
     val explainRecomposition = stringResource(R.string.suggestion_explain_recomposition)
     val roomOrDataStore = stringResource(R.string.suggestion_room_or_datastore)
@@ -201,15 +235,15 @@ private fun SuggestionChips(onSuggestionClick: (String) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        WelcomeSuggestionChip(
+        ComponentWelcomeSuggestionChip(
             text = reviewViewModel,
             onClick = { onSuggestionClick(reviewViewModel) },
         )
-        WelcomeSuggestionChip(
+        ComponentWelcomeSuggestionChip(
             text = explainRecomposition,
             onClick = { onSuggestionClick(explainRecomposition) },
         )
-        WelcomeSuggestionChip(
+        ComponentWelcomeSuggestionChip(
             text = roomOrDataStore,
             onClick = { onSuggestionClick(roomOrDataStore) },
         )
@@ -220,12 +254,12 @@ private fun SuggestionChips(onSuggestionClick: (String) -> Unit) {
  * One rounded glass suggestion chip. Tapping it reports its [text] through [onClick].
  */
 @Composable
-private fun WelcomeSuggestionChip(text: String, onClick: () -> Unit) {
-    val c = LocalAppColors.current
+private fun ComponentWelcomeSuggestionChip(text: String, onClick: () -> Unit) {
+    val colors = LocalAppColors.current
     Box(
         modifier = Modifier
             .height(40.dp)
-            .frostedGlass(c, CircleShape)
+            .frostedGlass(colors, CircleShape)
             .clickable(onClick = onClick)
             .semantics { role = Role.Button }
             .padding(horizontal = 14.dp)
@@ -235,102 +269,151 @@ private fun WelcomeSuggestionChip(text: String, onClick: () -> Unit) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
-            color = c.textPrimary,
+            color = colors.textPrimary,
         )
     }
 }
 
 //==================================== TESTS/PREVIEWS ====================================//
 
-@Preview(showBackground = true, heightDp = 640)
+@Preview(widthDp = 400, heightDp = 640)
 @Composable
-private fun MessageListConversationPreview() {
+private fun MessageListComponentConversationPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        MessageList(
-            messages = previewConversation,
-            isWaitingForReply = false,
-            onEditMessage = { },
-            onCopyMessage = { },
-            onRegenerateMessage = { },
-            onSuggestionClick = { },
-        )
+        Box(Modifier.fillMaxSize().glowBackground(LocalAppColors.current)) {
+            MessageListComponent(
+                messages = previewConversation,
+                isWaitingForReply = false,
+                onEditMessage = { },
+                onCopyMessage = { },
+                onRegenerateMessage = { },
+                onSuggestionClick = { },
+            )
+        }
     }
 }
 
-@Preview(showBackground = true, heightDp = 640)
+@Preview(widthDp = 400, heightDp = 640)
 @Composable
-private fun MessageListWaitingPreview() {
-    DroidMentorTheme(colors = DefaultDarkColors) {
-        MessageList(
-            messages = previewConversation,
-            isWaitingForReply = true,
-            onEditMessage = { },
-            onCopyMessage = { },
-            onRegenerateMessage = { },
-            onSuggestionClick = { },
-        )
-    }
-}
-
-@Preview(showBackground = true, heightDp = 640)
-@Composable
-private fun MessageListEmptyPreview() {
-    DroidMentorTheme(colors = DefaultDarkColors) {
-        MessageList(
-            messages = emptyList(),
-            isWaitingForReply = false,
-            onEditMessage = { },
-            onCopyMessage = { },
-            onRegenerateMessage = { },
-            onSuggestionClick = { },
-        )
-    }
-}
-
-@Preview(showBackground = true, heightDp = 640)
-@Composable
-private fun MessageListEmptyLightPreview() {
+private fun MessageListComponentConversationLightPreview() {
     DroidMentorTheme(colors = DefaultLightColors) {
-        MessageList(
-            messages = emptyList(),
-            isWaitingForReply = false,
-            onEditMessage = { },
-            onCopyMessage = { },
-            onRegenerateMessage = { },
-            onSuggestionClick = { },
-        )
+        Box(Modifier.fillMaxSize().glowBackground(LocalAppColors.current)) {
+            MessageListComponent(
+                messages = previewConversation,
+                isWaitingForReply = false,
+                onEditMessage = { },
+                onCopyMessage = { },
+                onRegenerateMessage = { },
+                onSuggestionClick = { },
+            )
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(widthDp = 400, heightDp = 640)
 @Composable
-private fun EmptyChatWelcomePreview() {
+private fun MessageListComponentWaitingPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        EmptyChatWelcome(onSuggestionClick = { })
+        Box(Modifier.fillMaxSize().glowBackground(LocalAppColors.current)) {
+            MessageListComponent(
+                messages = previewConversation,
+                isWaitingForReply = true,
+                onEditMessage = { },
+                onCopyMessage = { },
+                onRegenerateMessage = { },
+                onSuggestionClick = { },
+            )
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(widthDp = 400, heightDp = 640)
 @Composable
-private fun WelcomeGreetingPreview() {
+private fun MessageListComponentEmptyPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        WelcomeGreeting()
+        Box(Modifier.fillMaxSize().glowBackground(LocalAppColors.current)) {
+            MessageListComponent(
+                messages = emptyList(),
+                isWaitingForReply = false,
+                onEditMessage = { },
+                onCopyMessage = { },
+                onRegenerateMessage = { },
+                onSuggestionClick = { },
+            )
+        }
     }
 }
 
-@Preview(showBackground = true, widthDp = 360)
+@Preview(widthDp = 400, heightDp = 640)
 @Composable
-private fun SuggestionChipsPreview() {
-    DroidMentorTheme(colors = DefaultDarkColors) {
-        SuggestionChips(onSuggestionClick = { })
+private fun MessageListComponentEmptyLightPreview() {
+    DroidMentorTheme(colors = DefaultLightColors) {
+        Box(Modifier.fillMaxSize().glowBackground(LocalAppColors.current)) {
+            MessageListComponent(
+                messages = emptyList(),
+                isWaitingForReply = false,
+                onEditMessage = { },
+                onCopyMessage = { },
+                onRegenerateMessage = { },
+                onSuggestionClick = { },
+            )
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(widthDp = 400, heightDp = 640)
 @Composable
-private fun WelcomeSuggestionChipPreview() {
+private fun ComponentMessagesPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        WelcomeSuggestionChip(text = "Explain recomposition", onClick = { })
+        Box(Modifier.fillMaxSize().glowBackground(LocalAppColors.current)) {
+            ComponentMessages(
+                messages = previewConversation,
+                isWaitingForReply = true,
+                onEditMessage = { },
+                onCopyMessage = { },
+                onRegenerateMessage = { },
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 400)
+@Composable
+private fun ComponentEmptyChatWelcomePreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(vertical = 16.dp)) {
+            ComponentEmptyChatWelcome(onSuggestionClick = { })
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ComponentWelcomeGreetingPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentWelcomeGreeting()
+        }
+    }
+}
+
+@Preview(widthDp = 360)
+@Composable
+private fun ComponentSuggestionChipsPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentSuggestionChips(onSuggestionClick = { })
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ComponentWelcomeSuggestionChipPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentWelcomeSuggestionChip(text = "Explain recomposition", onClick = { })
+        }
     }
 }
 

@@ -67,6 +67,7 @@ class ActiveChatScreenViewModel : ViewModel() {
         Log.v(logTag, "init on ${hashCode()}")
     }
 
+    /** ViewModel life confirmation */
     override fun onCleared() {
         super.onCleared()
         Log.v(logTag, "onCleared() on ${hashCode()}")
@@ -76,6 +77,7 @@ class ActiveChatScreenViewModel : ViewModel() {
     var state by mutableStateOf(ActiveChatScreenState())
         private set
 
+    /** For now lives only in memory, TODO (pass this work to the database) */
     private var nextMessageId = 1L
 
     /**

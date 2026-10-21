@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,7 +23,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
+import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
+import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
+import isel.pdm.droidmentor.ui.theme.LocalAppColors
+import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
 
 const val ATTACHMENT_PREVIEW_TAG = "attachment_preview"
 const val REMOVE_ATTACHMENT_BUTTON_TAG = "remove_attachment_button"
@@ -38,7 +41,7 @@ const val REMOVE_ATTACHMENT_BUTTON_TAG = "remove_attachment_button"
  * @param modifier Modifier applied to the preview.
  */
 @Composable
-fun AttachmentPreview(
+fun AttachmentComponent(
     imageUri: Uri,
     onRemoveClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -46,11 +49,11 @@ fun AttachmentPreview(
     // The thumbnail is padded on top and end so the remove button can sit on its corner
     // while staying inside this Box: taps outside a parent's bounds are not delivered.
     Box(modifier = modifier.testTag(ATTACHMENT_PREVIEW_TAG)) {
-        Thumbnail(
+        ComponentThumbnail(
             imageUri = imageUri,
             modifier = Modifier.padding(top = 8.dp, end = 8.dp),
         )
-        RemoveAttachmentButton(
+        ComponentRemoveAttachmentButton(
             onClick = onRemoveClick,
             modifier = Modifier.align(Alignment.TopEnd),
         )
@@ -61,21 +64,22 @@ fun AttachmentPreview(
  * The 72.dp square thumbnail. For now a placeholder with the attach icon.
  */
 @Composable
-private fun Thumbnail(imageUri: Uri, modifier: Modifier = Modifier) {
+private fun ComponentThumbnail(imageUri: Uri, modifier: Modifier = Modifier) {
     // TODO: load imageUri with Coil (image step)
+    val colors = LocalAppColors.current
     val shape = RoundedCornerShape(14.dp)
     Box(
         modifier = modifier
             .size(72.dp)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape),
+            .background(colors.surface)
+            .border(1.dp, colors.borderSubtle, shape),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             painter = painterResource(R.drawable.ic_attach_file),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = colors.textSecondary,
         )
     }
 }
@@ -84,12 +88,13 @@ private fun Thumbnail(imageUri: Uri, modifier: Modifier = Modifier) {
  * Small 22.dp round button with a close icon that removes the attachment.
  */
 @Composable
-private fun RemoveAttachmentButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun ComponentRemoveAttachmentButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalAppColors.current
     Box(
         modifier = modifier
             .size(22.dp)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.inverseSurface)
+            .background(colors.textPrimary)
             .clickable(onClick = onClick, role = Role.Button)
             .testTag(REMOVE_ATTACHMENT_BUTTON_TAG),
         contentAlignment = Alignment.Center,
@@ -97,7 +102,7 @@ private fun RemoveAttachmentButton(onClick: () -> Unit, modifier: Modifier = Mod
         Icon(
             imageVector = Icons.Default.Close,
             contentDescription = stringResource(R.string.attachment_remove),
-            tint = MaterialTheme.colorScheme.inverseOnSurface,
+            tint = colors.background,
             modifier = Modifier.size(14.dp),
         )
     }
@@ -105,26 +110,42 @@ private fun RemoveAttachmentButton(onClick: () -> Unit, modifier: Modifier = Mod
 
 //==================================== TESTS/PREVIEWS ====================================//
 
-@Preview(showBackground = true)
+@Preview
 @Composable
-private fun AttachmentPreviewPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        AttachmentPreview(imageUri = Uri.EMPTY, onRemoveClick = { })
+private fun AttachmentComponentDarkPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            AttachmentComponent(imageUri = Uri.EMPTY, onRemoveClick = { })
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
-private fun ThumbnailPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        Thumbnail(imageUri = Uri.EMPTY)
+private fun AttachmentComponentLightPreview() {
+    DroidMentorTheme(colors = DefaultLightColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            AttachmentComponent(imageUri = Uri.EMPTY, onRemoveClick = { })
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
-private fun RemoveAttachmentButtonPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        RemoveAttachmentButton(onClick = { })
+private fun ComponentThumbnailPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentThumbnail(imageUri = Uri.EMPTY)
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ComponentRemoveAttachmentButtonPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentRemoveAttachmentButton(onClick = { })
+        }
     }
 }

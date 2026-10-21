@@ -1,6 +1,7 @@
 package isel.pdm.droidmentor.activechat.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -30,9 +31,11 @@ import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.activechat.Author
 import isel.pdm.droidmentor.activechat.ChatMessage
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
+import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
 import isel.pdm.droidmentor.ui.theme.modifiers.frostedGlass
+import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
 
 const val MENTOR_COPY_BUTTON_TAG = "mentor_copy_button"
 const val MENTOR_REGENERATE_BUTTON_TAG = "mentor_regenerate_button"
@@ -40,24 +43,24 @@ const val MENTOR_REGENERATE_BUTTON_TAG = "mentor_regenerate_button"
 /**
  * A message written by the mentor, aligned to the start of the screen, with an avatar.
  *
- * Text between ``` lines is shown as a [CodeBlock]; the rest is plain text.
+ * Text between lines is shown as a [CodeBlockComponent]; the rest is plain text.
  * Under the content there are "Copy" and "Regenerate" actions.
  *
  * @param message The message to show. Expected to have [Author.MENTOR].
  * @param onCopyClick Called when the user taps "Copy".
  * @param onRegenerateClick Called when the user taps "Regenerate".
- * @param isAvatarAnimated `true` while this answer is still being written (streaming, later).
  * @param modifier Modifier applied to the whole row.
+ * @param isAvatarAnimated `true` while this answer is still being written (streaming, later).
  */
 @Composable
-fun MentorMessageBubble(
+fun MentorMessageBubbleComponent(
     message: ChatMessage,
     onCopyClick: () -> Unit,
     onRegenerateClick: () -> Unit,
-    isAvatarAnimated: Boolean = false,
     modifier: Modifier = Modifier,
+    isAvatarAnimated: Boolean = false,
 ) {
-    val c = LocalAppColors.current
+    val colors = LocalAppColors.current
     val parts = remember(message.text) { splitIntoParts(message.text) }
 
     Row(
@@ -65,13 +68,13 @@ fun MentorMessageBubble(
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.Top,
     ) {
-        MentorAvatar(animated = isAvatarAnimated)
+        MentorAvatarComponent(animated = isAvatarAnimated)
         Spacer(modifier = Modifier.width(8.dp))
         Column(
             modifier = Modifier
                 .widthIn(max = 300.dp)
                 .frostedGlass(
-                    c,
+                    colors,
                     RoundedCornerShape(
                         topStart = 6.dp,
                         topEnd = 20.dp,
@@ -87,12 +90,12 @@ fun MentorMessageBubble(
                     is MessagePart.Plain -> Text(
                         text = part.text,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = c.textPrimary,
+                        color = colors.textPrimary,
                     )
-                    is MessagePart.Code -> CodeBlock(code = part.code)
+                    is MessagePart.Code -> CodeBlockComponent(code = part.code)
                 }
             }
-            MentorActions(
+            ComponentMentorActions(
                 onCopyClick = onCopyClick,
                 onRegenerateClick = onRegenerateClick,
             )
@@ -103,39 +106,62 @@ fun MentorMessageBubble(
 /**
  * The "Copy" and "Regenerate" actions under the mentor's message.
  *
- * Copy is a text button because material-icons-core has no copy icon.
+ * @param onCopyClick Called when the user taps "Copy".
+ * @param onRegenerateClick Called when the user taps "Regenerate".
  */
 @Composable
-private fun MentorActions(
+private fun ComponentMentorActions(
     onCopyClick: () -> Unit,
     onRegenerateClick: () -> Unit,
 ) {
-    val c = LocalAppColors.current
     Row(verticalAlignment = Alignment.CenterVertically) {
-        TextButton(
-            onClick = onCopyClick,
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-            modifier = Modifier.testTag(MENTOR_COPY_BUTTON_TAG),
-        ) {
-            Text(
-                text = stringResource(R.string.mentor_message_copy),
-                style = MaterialTheme.typography.labelMedium,
-                color = c.textSecondary,
-            )
-        }
-        IconButton(
-            onClick = onRegenerateClick,
-            modifier = Modifier
-                .size(32.dp)
-                .testTag(MENTOR_REGENERATE_BUTTON_TAG),
-        ) {
-            Icon(
-                imageVector = Icons.Default.Refresh,
-                contentDescription = stringResource(R.string.mentor_message_regenerate),
-                tint = c.textSecondary,
-                modifier = Modifier.size(18.dp),
-            )
-        }
+        ComponentCopyButton(onClick = onCopyClick)
+        ComponentRegenerateButton(onClick = onRegenerateClick)
+    }
+}
+
+/**
+ * Text button that copies the mentor's message.
+ * A text button because material-icons-core has no copy icon.
+ *
+ * @param onClick Called when the user taps the button.
+ * @param modifier Modifier applied to the button.
+ */
+@Composable
+fun ComponentCopyButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    TextButton(
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+        modifier = modifier.testTag(MENTOR_COPY_BUTTON_TAG),
+    ) {
+        Text(
+            text = stringResource(R.string.mentor_message_copy),
+            style = MaterialTheme.typography.labelMedium,
+            color = LocalAppColors.current.textSecondary,
+        )
+    }
+}
+
+/**
+ * Small 32.dp icon button that asks the mentor to write the answer again.
+ *
+ * @param onClick Called when the user taps the button.
+ * @param modifier Modifier applied to the button.
+ */
+@Composable
+fun ComponentRegenerateButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier
+            .size(32.dp)
+            .testTag(MENTOR_REGENERATE_BUTTON_TAG),
+    ) {
+        Icon(
+            imageVector = Icons.Default.Refresh,
+            contentDescription = stringResource(R.string.mentor_message_regenerate),
+            tint = LocalAppColors.current.textSecondary,
+            modifier = Modifier.size(18.dp),
+        )
     }
 }
 
@@ -191,47 +217,103 @@ private fun toPart(lines: List<String>, isCode: Boolean): MessagePart? {
 
 //==================================== TESTS/PREVIEWS ====================================//
 
-@Preview(showBackground = true)
+@Preview(widthDp = 400)
 @Composable
-private fun MentorMessageBubbleTextPreview() {
+private fun MentorMessageBubbleComponentTextPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        MentorMessageBubble(
-            message = previewTextMessage,
-            onCopyClick = { },
-            onRegenerateClick = { },
-        )
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            MentorMessageBubbleComponent(
+                message = previewTextMessage,
+                onCopyClick = { },
+                onRegenerateClick = { },
+            )
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(widthDp = 400)
 @Composable
-private fun MentorMessageBubbleCodePreview() {
-    DroidMentorTheme(colors = DefaultDarkColors) {
-        MentorMessageBubble(
-            message = previewCodeMessage,
-            onCopyClick = { },
-            onRegenerateClick = { },
-        )
+private fun MentorMessageBubbleComponentTextLightPreview() {
+    DroidMentorTheme(colors = DefaultLightColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            MentorMessageBubbleComponent(
+                message = previewTextMessage,
+                onCopyClick = { },
+                onRegenerateClick = { },
+            )
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(widthDp = 400)
 @Composable
-private fun MentorMessageBubbleTextAfterCodePreview() {
+private fun MentorMessageBubbleComponentCodePreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        MentorMessageBubble(
-            message = previewTextAfterCodeMessage,
-            onCopyClick = { },
-            onRegenerateClick = { },
-        )
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            MentorMessageBubbleComponent(
+                message = previewCodeMessage,
+                onCopyClick = { },
+                onRegenerateClick = { },
+            )
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(widthDp = 400)
 @Composable
-private fun MentorActionsPreview() {
+private fun MentorMessageBubbleComponentCodeLightPreview() {
+    DroidMentorTheme(colors = DefaultLightColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            MentorMessageBubbleComponent(
+                message = previewCodeMessage,
+                onCopyClick = { },
+                onRegenerateClick = { },
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 400)
+@Composable
+private fun MentorMessageBubbleComponentTextAfterCodePreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        MentorActions(onCopyClick = { }, onRegenerateClick = { })
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            MentorMessageBubbleComponent(
+                message = previewTextAfterCodeMessage,
+                onCopyClick = { },
+                onRegenerateClick = { },
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ComponentMentorActionsPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentMentorActions(onCopyClick = { }, onRegenerateClick = { })
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ComponentCopyButtonPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentCopyButton(onClick = { })
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ComponentRegenerateButtonPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentRegenerateButton(onClick = { })
+        }
     }
 }
 
