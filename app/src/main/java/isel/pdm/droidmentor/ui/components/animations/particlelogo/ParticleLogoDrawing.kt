@@ -1,4 +1,4 @@
-package isel.pdm.droidmentor.activechat.components.particlelogo
+package isel.pdm.droidmentor.ui.components.animations.particlelogo
 
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.drawscope.DrawScope

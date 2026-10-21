@@ -1,4 +1,4 @@
-package isel.pdm.droidmentor.activechat.components.particlelogo
+package isel.pdm.droidmentor.ui.components.animations.particlelogo
 
 import kotlin.math.PI
 import kotlin.math.cos
