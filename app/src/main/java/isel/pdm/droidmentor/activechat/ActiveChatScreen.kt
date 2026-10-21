@@ -32,7 +32,7 @@ import isel.pdm.droidmentor.activechat.components.ChatTopBarComponent
 import isel.pdm.droidmentor.activechat.components.ErrorBannerComponent
 import isel.pdm.droidmentor.activechat.components.MessageListComponent
 import isel.pdm.droidmentor.activechat.components.OfflineBannerComponent
-import isel.pdm.droidmentor.activechat.components.particlelogo.ParticleLogoColors
+import isel.pdm.droidmentor.ui.components.animations.particlelogo.ParticleLogoColors
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme

@@ -49,7 +49,7 @@ import androidx.compose.ui.graphics.Canvas as BitmapCanvas
 /** Test tag of [ParticleBust]. */
 const val PARTICLE_BUST_TAG = "particle_bust"
 
-// Same model as the About screen's mascot (about/ParticleDroid.kt), copied here so the
+// Same model as the About screen's mascot (ui/components/animations/particledroid/), copied here so the
 // Title screen does not depend on the About screen.
 
 // ---- Particles ----

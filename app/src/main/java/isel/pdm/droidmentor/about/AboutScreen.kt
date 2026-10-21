@@ -38,6 +38,7 @@ import isel.pdm.droidmentor.about.components.GitHubButton
 import isel.pdm.droidmentor.about.components.InfoCard
 import isel.pdm.droidmentor.about.components.MemberRow
 import isel.pdm.droidmentor.about.components.MentorTip
+import isel.pdm.droidmentor.ui.components.animations.particledroid.ParticleDroid
 import isel.pdm.droidmentor.ui.theme.AppColors
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors

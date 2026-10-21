@@ -11,6 +11,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.buildLogTag
+import isel.pdm.droidmentor.chathistory.ChatHistoryActivity
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 
 /**
