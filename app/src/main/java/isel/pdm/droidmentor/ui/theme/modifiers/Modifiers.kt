@@ -62,7 +62,7 @@ private fun DrawScope.drawGlowBlob(color: Color, x: Float, y: Float, r: Float) {
 /** Neutral frosted glass: a fairly opaque surface fill with a subtle accent border.
  * Quieter than [glass], which is tinted with the accents and has a sheen.
  * The colors already follow the theme through [AppColors]. Except for bright mode where the border
- * is tinted white to make the glass effect  // TODO(aaaaaaaaaaaaaaaaaaaaaaaaa)aaaaaaaaaaaaaaaa
+ * is tinted white to make the glass effect
  * @param c The app colors to use.
  * @param shape The shape of the surface.
  */
@@ -131,10 +131,21 @@ fun Modifier.glass(
         ),
         shape
     )
-    // TODO
-//Brush.verticalGradient(
-//listOf(c.border, c.borderSubtle)
-//), ver como fica na border UPPPPPPPPPPPP TODO
+
+/**
+ * [frostedGlass] layered over [glass]: the frosted fill mutes the accent tint and sheen,
+ * while the glass rim stays on top.
+ *
+ * @param c The app colors to use.
+ * @param shape The shape of the surface.
+ */
+fun Modifier.layeredGlass(
+    c: AppColors,
+    shape: Shape = RoundedCornerShape(24.dp),
+) = this
+    .glass(c, shape)
+    .frostedGlass(c, shape)
+
 @Preview
 @Composable
 fun GlowBackgroundDarkPreview() {

@@ -18,7 +18,7 @@ private data class PresetSpec(
 
 private val presetSpecs = listOf(
     // Default (lime / green)
-    PresetSpec(Color(0xFFC3E84A), Color(0xFF3DDC4B), Color(0xFF040504), Color(0xFFF5F7F2)),
+    PresetSpec(Color(0xFF00BCD4), Color(0xFF009688), Color(0xFF040504), Color(0xFFF5F7F2)),
     // Violet / blue
     PresetSpec(Color(0xFF8B5CF6), Color(0xFF3B82F6), Color(0xFF05040A), Color(0xFFF6F5FB)),
     // Orange / pink
