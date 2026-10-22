@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,17 +36,19 @@ import isel.pdm.droidmentor.ui.theme.LocalAppColors
 import isel.pdm.droidmentor.ui.theme.modifiers.frostedGlass
 
 const val BACK_BUTTON_TAG = "back_button"
+const val HISTORY_BUTTON_TAG = "history_button"
 const val OPTIONS_BUTTON_TAG = "options_button"
 
 /**
  * Top bar of the Active Chat screen: a round back button, a pill with the mentor's
- * avatar and the chat title, and a round options button.
+ * avatar and the chat title, a round history button and a round options button.
  *
- * The bar itself has no background; each of its three parts has its own surface,
+ * The bar itself has no background; each of its parts has its own surface,
  * so it can sit on top of any screen background.
  *
  * @param title Title of the chat. Cut with an ellipsis if it does not fit in one line.
  * @param onBackClick Called when the user taps the back button.
+ * @param onHistoryClick Called when the user taps the history button.
  * @param onOptionsClick Called when the user taps the options button.
  * @param modifier Modifier applied to the bar.
  */
@@ -53,6 +56,7 @@ const val OPTIONS_BUTTON_TAG = "options_button"
 fun ChatTopBarComponent(
     title: String,
     onBackClick: () -> Unit,
+    onHistoryClick: () -> Unit,
     onOptionsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -76,6 +80,12 @@ fun ChatTopBarComponent(
         ) {
             ComponentTitlePill(title = title)
         }
+        ComponentRoundIconButton(
+            icon = Icons.AutoMirrored.Filled.List,
+            contentDescription = stringResource(R.string.chat_top_bar_history),
+            onClick = onHistoryClick,
+            testTag = HISTORY_BUTTON_TAG,
+        )
         ComponentRoundIconButton(
             icon = Icons.Default.MoreVert,
             contentDescription = stringResource(R.string.chat_top_bar_options),
@@ -150,6 +160,7 @@ private fun ChatTopBarComponentShortTitlePreview() {
         ChatTopBarComponent(
             title = previewShortTitle,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
         )
     }
@@ -162,6 +173,7 @@ private fun ChatTopBarComponentLongTitlePreview() {
         ChatTopBarComponent(
             title = previewLongTitle,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
         )
     }

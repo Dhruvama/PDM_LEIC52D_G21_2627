@@ -33,8 +33,8 @@ import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.activechat.Author
 import isel.pdm.droidmentor.activechat.ChatMessage
-import isel.pdm.droidmentor.activechat.components.particlelogo.ParticleLogoColors
-import isel.pdm.droidmentor.activechat.components.particlelogo.ParticleLogoComponent
+import isel.pdm.droidmentor.ui.components.animations.particlelogo.ParticleLogoColors
+import isel.pdm.droidmentor.ui.components.animations.particlelogo.ParticleLogoComponent
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
@@ -62,7 +62,7 @@ const val SUGGESTION_CHIP_TAG = "suggestion_chip"
  * @param onRegenerateMessage Called with the mentor's message whose "Regenerate" button was tapped.
  * @param onSuggestionClick Called with the text of the tapped suggestion, to fill the input with it.
  * @param assembleLogo `true` to make the welcome's logo gather from the Title screen's cloud
- * (entry transition). See [isel.pdm.droidmentor.activechat.components.particlelogo.ParticleLogoComponent].
+ * (entry transition). See [ParticleLogoComponent].
  * @param logoColors Colors of the welcome's logo chosen by the user, or `null` to use the theme.
  * @param modifier Modifier applied to the list (or to the welcome's container when empty).
  */

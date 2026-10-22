@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import isel.pdm.droidmentor.about.AboutActivity
 import isel.pdm.droidmentor.activechat.ActiveChatActivity
+import isel.pdm.droidmentor.chathistory.ChatHistoryActivity
 import isel.pdm.droidmentor.settings.SettingsActivity
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.settings.AppColorsStore
@@ -43,13 +44,16 @@ class TitleActivity : ComponentActivity() {
                             assembleLogo = true // Inicia a animação das partículas
                         )
                     },
+                    onHistory = {
+                        ChatHistoryActivity.navigateFrom(this@TitleActivity)
+                    },
+                    onSettings = {
+                        SettingsActivity.navigateFrom(this@TitleActivity)
+                    },
                     onAbout = {
                         Log.i(logTag, "About pressed (About screen not built yet)")
                         AboutActivity.navigateFrom(this@TitleActivity)
                     },
-                    onSettings = {
-                        SettingsActivity.navigateFrom(this@TitleActivity)
-                    }
                 )
             }
         }

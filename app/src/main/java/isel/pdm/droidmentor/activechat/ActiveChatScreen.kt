@@ -51,9 +51,15 @@ private val logTag = buildLogTag("ActiveChatScreen")
  * @param assembleLogo `true` when coming from the Title screen, so the welcome's logo
  * gathers from its cloud.
  * @param onBack Called when the user taps the back button.
+ * @param onHistory Called when the user taps the history button.
  */
 @Composable
-fun ActiveChatScreen(viewModel: ActiveChatScreenViewModel, assembleLogo: Boolean, onBack: () -> Unit) {
+fun ActiveChatScreen(
+    viewModel: ActiveChatScreenViewModel,
+    assembleLogo: Boolean,
+    onBack: () -> Unit,
+    onHistory: () -> Unit,
+) {
     val clipboard = LocalClipboardManager.current
     // The content handles the insets and draws its own background.
     Scaffold(containerColor = Color.Transparent, contentWindowInsets = WindowInsets(0)) { innerPadding ->
@@ -62,6 +68,7 @@ fun ActiveChatScreen(viewModel: ActiveChatScreenViewModel, assembleLogo: Boolean
                 state = viewModel.state,
                 assembleLogo = assembleLogo,
                 onBackClick = onBack,
+                onHistoryClick = onHistory,
                 onOptionsClick = {
                     Log.v(logTag, "Options clicked")
                     // TODO: options menu
@@ -102,6 +109,7 @@ fun ActiveChatScreen(viewModel: ActiveChatScreenViewModel, assembleLogo: Boolean
  *
  * @param state What the screen shows.
  * @param onBackClick Called when the user taps the back button.
+ * @param onHistoryClick Called when the user taps the history button.
  * @param onOptionsClick Called when the user taps the options button.
  * @param onInputChange Called with the new text whenever the user types.
  * @param onAttachClick Called when the user taps the attachment button.
@@ -122,6 +130,7 @@ fun ActiveChatScreen(viewModel: ActiveChatScreenViewModel, assembleLogo: Boolean
 private fun ActiveChatScreenContent(
     state: ActiveChatScreenState,
     onBackClick: () -> Unit,
+    onHistoryClick: () -> Unit,
     onOptionsClick: () -> Unit,
     onInputChange: (String) -> Unit,
     onAttachClick: () -> Unit,
@@ -146,6 +155,7 @@ private fun ActiveChatScreenContent(
             ChatTopBarComponent(
                 title = state.chatTitle ?: stringResource(R.string.new_chat),
                 onBackClick = onBackClick,
+                onHistoryClick = onHistoryClick,
                 onOptionsClick = onOptionsClick,
             )
             if (state.isOffline) {
@@ -224,6 +234,7 @@ private fun ActiveChatScreenNormalPreview() {
         ActiveChatScreenContent(
             state = previewNormalState,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -246,6 +257,7 @@ private fun ActiveChatScreenNewChatPreview() {
         ActiveChatScreenContent(
             state = ActiveChatScreenState(),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -268,6 +280,7 @@ private fun ActiveChatScreenNewChatWithCustomLogoColorsPreview() {
         ActiveChatScreenContent(
             state = ActiveChatScreenState(),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -296,6 +309,7 @@ private fun ActiveChatScreenWaitingPreview() {
         ActiveChatScreenContent(
             state = previewNormalState.copy(status = ChatStatus.Waiting),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -318,6 +332,7 @@ private fun ActiveChatScreenOfflinePreview() {
         ActiveChatScreenContent(
             state = previewNormalState.copy(isOffline = true),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -340,6 +355,7 @@ private fun ActiveChatScreenErrorPreview() {
         ActiveChatScreenContent(
             state = previewNormalState.copy(status = ChatStatus.Failed(FailureReason.RATE_LIMITED)),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -362,6 +378,7 @@ private fun ActiveChatScreenInvalidKeyPreview() {
         ActiveChatScreenContent(
             state = previewNormalState.copy(status = ChatStatus.Failed(FailureReason.INVALID_KEY)),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -387,6 +404,7 @@ private fun ActiveChatScreenWithAttachmentPreview() {
                 attachedImage = Uri.EMPTY,
             ),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -409,6 +427,7 @@ private fun ActiveChatScreenLightThemePreview() {
         ActiveChatScreenContent(
             state = previewNormalState,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -431,6 +450,7 @@ private fun ActiveChatScreenVioletThemePreview() {
         ActiveChatScreenContent(
             state = previewNormalState,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -453,6 +473,7 @@ private fun ActiveChatScreenLandscapePreview() {
         ActiveChatScreenContent(
             state = previewNormalState,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -475,6 +496,7 @@ private fun ActiveChatScreenNewChatLandscapePreview() {
         ActiveChatScreenContent(
             state = ActiveChatScreenState(),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -498,6 +520,7 @@ private fun ActiveChatScreenInteractivePreview() {
         ActiveChatScreenContent(
             state = state,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { state = state.copy(inputText = it) },
             onAttachClick = { },

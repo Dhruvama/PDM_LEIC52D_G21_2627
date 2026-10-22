@@ -56,6 +56,7 @@ class ActiveChatActivity : ComponentActivity() {
                     viewModel = viewModel,
                     assembleLogo = assembleLogo,
                     onBack = { finish() },
+                    onHistory = { ChatHistoryActivity.navigateFrom(this@ActiveChatActivity) },
                 )
             }
         }

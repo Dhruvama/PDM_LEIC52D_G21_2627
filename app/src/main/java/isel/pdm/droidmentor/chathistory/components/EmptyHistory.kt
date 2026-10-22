@@ -22,7 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
-import isel.pdm.droidmentor.activechat.components.particlelogo.ParticleLogoComponent
+import isel.pdm.droidmentor.ui.components.animations.particlelogo.ParticleLogoComponent
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
