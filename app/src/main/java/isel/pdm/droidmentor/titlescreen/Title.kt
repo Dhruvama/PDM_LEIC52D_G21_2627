@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,8 +37,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -73,6 +74,12 @@ const val START_CHAT_BUTTON_TAG = "start_chat_button"
 /** Test tag of the About button. */
 const val ABOUT_BUTTON_TAG = "about_button"
 
+/** Test tag of the History button. */
+const val TITLE_HISTORY_BUTTON_TAG = "title_history_button"
+
+/** Test tag of the Settings button. */
+const val SETTINGS_BUTTON_TAG = "settings_button"
+
 /** Time the dots take to (almost fully) form the swirl before navigating to the chat. */
 private const val SCATTER_DELAY_MS = 700L
 
@@ -100,11 +107,14 @@ private val CHAT_COMPOSER_FIXED_HEIGHT = 106.dp
  *
  * @param onStartChat called when the user starts a chat, after the dots have scattered
  * (immediately if the system has animations turned off).
+ * @param onHistory called when the user presses the History button.
+ * @param onSettings called when the user presses the Settings button.
  * @param onAbout called when the user presses the About button.
  */
 @Composable
 fun TitleScreen(
     onStartChat: () -> Unit,
+    onHistory: () -> Unit,
     onSettings: () -> Unit,
     onAbout: () -> Unit,
 ) {
@@ -134,8 +144,9 @@ fun TitleScreen(
                 }
             }
         },
+        onHistory = onHistory,
+        onSettings = onSettings,
         onAbout = onAbout,
-        onSettings
     )
 }
 
@@ -156,15 +167,16 @@ private fun isReducedMotion(context: Context): Boolean =
 private fun TitleScreenContent(
     gathered: Boolean,
     onStartChatClick: () -> Unit,
+    onHistory: () -> Unit,
+    onSettings: () -> Unit,
     onAbout: () -> Unit,
-    onSettings: () -> Unit
 ) {
     val isLandscape =
         LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     if (isLandscape) {
-        TitleLandscape(gathered, onStartChatClick, onAbout, onSettings)
+        TitleLandscape(gathered, onStartChatClick, onHistory, onSettings, onAbout)
     } else {
-        TitlePortrait(gathered, onStartChatClick, onAbout, onSettings)
+        TitlePortrait(gathered, onStartChatClick, onHistory, onSettings, onAbout)
     }
 }
 
@@ -172,8 +184,9 @@ private fun TitleScreenContent(
 private fun TitlePortrait(
     gathered: Boolean,
     onStartChatClick: () -> Unit,
-    onAbout: () -> Unit,
+    onHistory: () -> Unit,
     onSettings: () -> Unit,
+    onAbout: () -> Unit,
 ) {
     val composerHeight = with(LocalDensity.current) {
         MaterialTheme.typography.bodyLarge.lineHeight.toDp()
@@ -200,7 +213,7 @@ private fun TitlePortrait(
                 .fillMaxSize()
                 .systemBarsPadding(),
         ) {
-            TitleTopRow(onAbout = onAbout, onSettings = onSettings)
+            TitleTopRow(onHistory = onHistory, onSettings = onSettings, onAbout = onAbout)
             Spacer(Modifier.weight(1f))
             Column(
                 modifier = Modifier
@@ -294,8 +307,9 @@ private fun ChatWelcomeSpace() {
 private fun TitleLandscape(
     gathered: Boolean,
     onStartChatClick: () -> Unit,
-    onAbout: () -> Unit,
+    onHistory: () -> Unit,
     onSettings: () -> Unit,
+    onAbout: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -303,7 +317,7 @@ private fun TitleLandscape(
             .glowBackground(LocalAppColors.current)
             .systemBarsPadding(),
     ) {
-        TitleTopRow(onAbout = onAbout, onSettings = onSettings)
+        TitleTopRow(onHistory = onHistory, onSettings = onSettings, onAbout = onAbout)
 
         Row(
             modifier = Modifier
@@ -341,9 +355,9 @@ private fun TitleLandscape(
 // Small named pieces
 // ---------------------------------------------------------------------------
 
-/** App name on the left, About button on the right. */
+/** App name on the left, History, Settings and About buttons on the right. */
 @Composable
-private fun TitleTopRow(onAbout: () -> Unit, onSettings: () -> Unit) {
+private fun TitleTopRow(onHistory: () -> Unit, onSettings: () -> Unit, onAbout: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -352,8 +366,57 @@ private fun TitleTopRow(onAbout: () -> Unit, onSettings: () -> Unit) {
     ) {
         AppName()
         Spacer(Modifier.weight(1f))
-        SettingsButton(onClick = onSettings)
-        AboutButton(onClick = onAbout)
+        TitleIconButton(
+            icon = Icons.AutoMirrored.Filled.List,
+            contentDescription = stringResource(R.string.chat_history_title),
+            testTag = TITLE_HISTORY_BUTTON_TAG,
+            onClick = onHistory,
+        )
+        TitleIconButton(
+            icon = Icons.Default.Settings,
+            contentDescription = stringResource(R.string.title_activity_settings),
+            testTag = SETTINGS_BUTTON_TAG,
+            onClick = onSettings,
+        )
+        TitleIconButton(
+            icon = Icons.Default.Info,
+            contentDescription = stringResource(R.string.title_about_description),
+            testTag = ABOUT_BUTTON_TAG,
+            onClick = onAbout,
+        )
+    }
+}
+
+/**
+ * 44 dp circular frosted glass button with [icon], used in the top row.
+ *
+ * @param icon The icon shown in the middle.
+ * @param contentDescription Read by accessibility services, since the button has no text.
+ * @param testTag Tag used to find the button in tests.
+ * @param onClick Called when the user taps the button.
+ */
+@Composable
+private fun TitleIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    testTag: String,
+    onClick: () -> Unit,
+) {
+    val c = LocalAppColors.current
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .frostedGlass(c, CircleShape)
+            .clickable(onClick = onClick)
+            .semantics { role = Role.Button }
+            .testTag(testTag),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = c.textPrimary,
+        )
     }
 }
 
@@ -370,52 +433,12 @@ private fun AppName() {
     }
     Text(
         text = name,
-        style = MaterialTheme.typography.titleMedium,
+        style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold,
         color = c.textPrimary,
     )
 }
 
-/** 44 dp circular frosted glass button with an info icon. */
-@Composable
-private fun AboutButton(onClick: () -> Unit) {
-    val c = LocalAppColors.current
-    Box(
-        modifier = Modifier
-            .size(44.dp)
-            .frostedGlass(c, CircleShape)
-            .clickable(onClick = onClick)
-            .semantics { role = Role.Button }
-            .testTag(ABOUT_BUTTON_TAG),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Default.Info,
-            contentDescription = stringResource(R.string.title_about_description),
-            tint = c.textPrimary,
-        )
-    }
-}
-
-/** 44 dp circular frosted glass button with a settings (gear) icon. */
-@Composable
-private fun SettingsButton(onClick: () -> Unit) {
-    val c = LocalAppColors.current
-    Box(
-        modifier = Modifier
-            .size(44.dp)
-            .frostedGlass(c, CircleShape)
-            .clickable(onClick = onClick)
-            .semantics { role = Role.Button },
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = Icons.Default.Settings,
-            contentDescription = stringResource(R.string.title_activity_settings),
-            tint = c.textPrimary,
-        )
-    }
-}
 
 @Composable
 private fun TitleHeadline() {
@@ -518,7 +541,7 @@ private fun ChatWelcomeSpacePreview() {
 @Composable
 private fun TitleScreenPortraitDarkPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        TitleScreen(onStartChat = {}, onSettings = {},onAbout = {})
+        TitleScreen(onStartChat = {}, onHistory = {}, onSettings = {}, onAbout = {})
     }
 }
 
@@ -526,7 +549,7 @@ private fun TitleScreenPortraitDarkPreview() {
 @Composable
 private fun TitleScreenPortraitLightPreview() {
     DroidMentorTheme(colors = DefaultLightColors) {
-        TitleScreen(onStartChat = {}, onSettings = {},onAbout = {})
+        TitleScreen(onStartChat = {}, onHistory = {}, onSettings = {}, onAbout = {})
     }
 }
 
@@ -534,7 +557,7 @@ private fun TitleScreenPortraitLightPreview() {
 @Composable
 private fun TitleScreenLandscapeDarkPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        TitleScreen(onStartChat = {}, onSettings = {},onAbout = {})
+        TitleScreen(onStartChat = {}, onHistory = {}, onSettings = {}, onAbout = {})
     }
 }
 
@@ -542,6 +565,6 @@ private fun TitleScreenLandscapeDarkPreview() {
 @Composable
 private fun TitleScreenLandscapeLightPreview() {
     DroidMentorTheme(colors = DefaultLightColors) {
-        TitleScreen(onStartChat = {}, onSettings = {},onAbout = {})
+        TitleScreen(onStartChat = {}, onHistory = {}, onSettings = {}, onAbout = {})
     }
 }
