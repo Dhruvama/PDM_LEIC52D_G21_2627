@@ -1,5 +1,6 @@
 package isel.pdm.droidmentor.chathistory.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,25 +29,31 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
+import isel.pdm.droidmentor.ui.theme.AppColors
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
-import isel.pdm.droidmentor.ui.theme.modifiers.glass
+import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
+import isel.pdm.droidmentor.ui.theme.modifiers.layeredGlass
 
 const val CHAT_SEARCH_FIELD_TAG = "chat_search_field"
+const val CHAT_SEARCH_MATCH_COUNT_TAG = "chat_search_match_count"
 
 /**
- * Glass pill to search the saved chats, with a button to clear it once something is typed.
+ * Glass pill to search the saved chats, with the number of matches and a button to clear it
+ * once something is typed.
  *
  * @param query Text currently typed.
  * @param onQueryChange Called with the new text whenever the user types or clears it.
+ * @param matchCount How many chats match [query]; shown only while [query] isn't blank.
  */
 @Composable
 fun ChatSearchField(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    matchCount: Int = 0,
 ) {
     val c = LocalAppColors.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -54,7 +61,7 @@ fun ChatSearchField(
 
     Row(
         modifier = modifier
-            .glass(c, CircleShape)
+            .layeredGlass(c, CircleShape)
             .padding(start = 16.dp, end = 4.dp)
             .heightIn(min = 52.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -86,6 +93,9 @@ fun ChatSearchField(
                 }
             },
         )
+        if (query.isNotBlank()) {
+            MatchCountBadge(count = matchCount)
+        }
         if (query.isNotEmpty()) {
             IconButton(onClick = { onQueryChange("") }) {
                 Icon(
@@ -98,34 +108,60 @@ fun ChatSearchField(
     }
 }
 
-@Preview(showBackground = true)
+/** Small accent pill with how many chats match the search. */
 @Composable
-private fun ChatSearchFieldEmptyPreview() {
-    DroidMentorTheme(colors = DefaultDarkColors) {
-        ChatSearchField(query = "", onQueryChange = { }, modifier = Modifier.padding(16.dp))
+private fun MatchCountBadge(count: Int, modifier: Modifier = Modifier) {
+    val c = LocalAppColors.current
+    Box(
+        modifier = modifier
+            .padding(start = 8.dp)
+            .background(c.accent.copy(alpha = 0.15f), CircleShape)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .testTag(CHAT_SEARCH_MATCH_COUNT_TAG),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.labelMedium,
+            color = c.accent,
+        )
     }
 }
 
-@Preview(showBackground = true)
+//==================================== TESTS/PREVIEWS ====================================//
+
+/** Draws the field over the app's background so the glass is visible. */
 @Composable
-private fun ChatSearchFieldTypedPreview() {
-    DroidMentorTheme(colors = DefaultDarkColors) {
-        ChatSearchField(query = "compose", onQueryChange = { }, modifier = Modifier.padding(16.dp))
+private fun PreviewContent(query: String, matchCount: Int = 0, colors: AppColors = DefaultDarkColors) {
+    DroidMentorTheme(colors = colors) {
+        Box(Modifier.glowBackground(LocalAppColors.current)) {
+            ChatSearchField(
+                query = query,
+                onQueryChange = { },
+                matchCount = matchCount,
+                modifier = Modifier.padding(16.dp),
+            )
+        }
     }
 }
 
-@Preview(showBackground = true)
+@Preview(widthDp = 360)
 @Composable
-private fun ChatSearchFieldEmptyLightPreview() {
-    DroidMentorTheme(colors = DefaultLightColors) {
-        ChatSearchField(query = "", onQueryChange = { }, modifier = Modifier.padding(16.dp))
-    }
-}
+private fun ChatSearchFieldEmptyPreview() = PreviewContent(query = "")
 
-@Preview(showBackground = true)
+@Preview(widthDp = 360)
 @Composable
-private fun ChatSearchFieldTypedLightPreview() {
-    DroidMentorTheme(colors = DefaultLightColors) {
-        ChatSearchField(query = "compose", onQueryChange = { }, modifier = Modifier.padding(16.dp))
-    }
-}
+private fun ChatSearchFieldTypedPreview() = PreviewContent(query = "compose", matchCount = 2)
+
+@Preview(widthDp = 360)
+@Composable
+private fun ChatSearchFieldNoMatchesPreview() = PreviewContent(query = "elden ring", matchCount = 0)
+
+@Preview(widthDp = 360)
+@Composable
+private fun ChatSearchFieldEmptyLightPreview() = PreviewContent(query = "", colors = DefaultLightColors)
+
+@Preview(widthDp = 360)
+@Composable
+private fun ChatSearchFieldTypedLightPreview() =
+    PreviewContent(query = "compose", matchCount = 2, colors = DefaultLightColors)

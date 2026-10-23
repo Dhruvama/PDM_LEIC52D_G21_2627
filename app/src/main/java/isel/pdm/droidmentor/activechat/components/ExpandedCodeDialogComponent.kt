@@ -5,6 +5,7 @@ import android.view.WindowManager
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -36,7 +38,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import isel.pdm.droidmentor.R
+import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
+import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
+import isel.pdm.droidmentor.ui.theme.LocalAppColors
+import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
 
 const val EXPANDED_CODE_DIALOG_TAG = "expanded_code_dialog"
 const val CLOSE_EXPANDED_CODE_BUTTON_TAG = "close_expanded_code_button"
@@ -51,7 +57,7 @@ const val CLOSE_EXPANDED_CODE_BUTTON_TAG = "close_expanded_code_button"
  * @param onDismiss Called when the window should close.
  */
 @Composable
-fun ExpandedCodeDialog(code: String, onDismiss: () -> Unit) {
+fun ExpandedCodeDialogComponent(code: String, onDismiss: () -> Unit) {
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -69,7 +75,7 @@ fun ExpandedCodeDialog(code: String, onDismiss: () -> Unit) {
             }
         }
 
-        ExpandedCodeContent(
+        ComponentExpandedCodeContent(
             code = code,
             onCloseClick = onDismiss,
             modifier = Modifier
@@ -80,7 +86,7 @@ fun ExpandedCodeDialog(code: String, onDismiss: () -> Unit) {
 }
 
 /**
- * What is inside [ExpandedCodeDialog]: a header with a title and a close button, and the code
+ * What is inside [ExpandedCodeDialogComponent]: a header with a title and a close button, and the code
  * below it. Separate from the dialog so it can be previewed.
  *
  * @param code The code to show.
@@ -88,16 +94,17 @@ fun ExpandedCodeDialog(code: String, onDismiss: () -> Unit) {
  * @param modifier Modifier applied to the window surface.
  */
 @Composable
-fun ExpandedCodeContent(
+fun ComponentExpandedCodeContent(
     code: String,
     onCloseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = LocalAppColors.current
     Surface(
         modifier = modifier.testTag(EXPANDED_CODE_DIALOG_TAG),
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = colors.surface,
+        border = BorderStroke(1.dp, colors.borderSubtle),
     ) {
         Column {
             Row(
@@ -107,29 +114,26 @@ fun ExpandedCodeContent(
                 Text(
                     text = stringResource(R.string.expanded_code_title),
                     style = MaterialTheme.typography.titleSmall,
+                    color = colors.textPrimary,
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                IconButton(
-                    onClick = onCloseClick,
+                ComponentBackButton(
+                    icon = Icons.Default.Close,
+                    onCloseClick = onCloseClick,
                     modifier = Modifier.testTag(CLOSE_EXPANDED_CODE_BUTTON_TAG),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.expanded_code_close),
-                    )
-                }
+                )
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(color = colors.borderSubtle)
             Text(
                 text = code,
                 style = MaterialTheme.typography.bodyMedium,
                 fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = colors.textPrimary,
                 softWrap = false,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                    .background(colors.background)
                     .verticalScroll(rememberScrollState())
                     .horizontalScroll(rememberScrollState())
                     .padding(16.dp),
@@ -138,13 +142,60 @@ fun ExpandedCodeContent(
     }
 }
 
+/**
+ * Icon button that closes the window it is in.
+ *
+ * @param icon The icon to show, e.g. [Icons.Default.Close].
+ * @param onCloseClick Called when the user taps the button.
+ * @param modifier Modifier applied to the button.
+ */
+@Composable
+fun ComponentBackButton(
+    icon: ImageVector,
+    onCloseClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        onClick = onCloseClick,
+        modifier = modifier,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = stringResource(R.string.expanded_code_close),
+            tint = LocalAppColors.current.textPrimary,
+        )
+    }
+}
+
 //==================================== TESTS/PREVIEWS ====================================//
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Preview(widthDp = 360, heightDp = 640)
 @Composable
-private fun ExpandedCodeContentPreview() {
-    DroidMentorTheme(dynamicColor = false) {
-        ExpandedCodeContent(code = previewLongCode, onCloseClick = { })
+private fun ComponentExpandedCodeContentDarkPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentExpandedCodeContent(code = previewLongCode, onCloseClick = { })
+        }
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 640)
+@Composable
+private fun ComponentExpandedCodeContentLightPreview() {
+    DroidMentorTheme(colors = DefaultLightColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentExpandedCodeContent(code = previewLongCode, onCloseClick = { })
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ComponentBackButtonPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.glowBackground(LocalAppColors.current).padding(16.dp)) {
+            ComponentBackButton(icon = Icons.Default.Close, onCloseClick = { })
+        }
     }
 }
 

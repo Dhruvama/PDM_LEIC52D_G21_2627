@@ -46,12 +46,12 @@ const val USER_EDIT_BUTTON_TAG = "user_edit_button"
  * @param modifier Modifier applied to the whole row.
  */
 @Composable
-fun UserMessageBubble(
+fun UserMessageBubbleComponent(
     message: ChatMessage,
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalAppColors.current
+    val colors = LocalAppColors.current
     val bubbleShape = RoundedCornerShape(
         topStart = 20.dp,
         topEnd = 20.dp,
@@ -66,22 +66,22 @@ fun UserMessageBubble(
         Column(
             modifier = Modifier
                 .widthIn(max = 300.dp)
-                .background(color = c.accentContainer, shape = bubbleShape)
-                .border(width = 1.dp, color = c.border, shape = bubbleShape)
+                .background(color = colors.accentContainer, shape = bubbleShape)
+                .border(width = 1.dp, color = colors.border, shape = bubbleShape)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (message.imageUri != null) {
-                ImagePlaceholder()
+                ComponentImagePlaceholder()
             }
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = message.text,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = c.textPrimary,
+                    color = colors.textPrimary,
                 )
                 Row(modifier = Modifier.align(Alignment.End)) {
-                    EditButton(onClick = onEditClick)
+                    ComponentEditButton(onClick = onEditClick)
                 }
             }
         }
@@ -92,7 +92,7 @@ fun UserMessageBubble(
  * Stand-in for the attached image until real image loading is added.
  */
 @Composable
-private fun ImagePlaceholder() {
+private fun ComponentImagePlaceholder() {
     Box(
         modifier = Modifier
             .size(width = 160.dp, height = 200.dp)
@@ -115,8 +115,8 @@ private fun ImagePlaceholder() {
  * It has no background of its own, so it sits directly on the bubble color.
  */
 @Composable
-private fun EditButton(onClick: () -> Unit) {
-    val c = LocalAppColors.current
+private fun ComponentEditButton(onClick: () -> Unit) {
+    val colors = LocalAppColors.current
     IconButton(
         onClick = onClick,
         modifier = Modifier
@@ -126,7 +126,7 @@ private fun EditButton(onClick: () -> Unit) {
         Icon(
             imageVector = Icons.Default.Edit,
             contentDescription = stringResource(R.string.user_message_edit_description),
-            tint = c.textSecondary,
+            tint = colors.textSecondary,
             modifier = Modifier.size(16.dp),
         )
     }
@@ -136,33 +136,33 @@ private fun EditButton(onClick: () -> Unit) {
 
 @Preview(showBackground = true)
 @Composable
-private fun UserMessageBubbleTextPreview() {
+private fun UserMessageBubbleComponentTextPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        UserMessageBubble(message = previewTextMessage, onEditClick = { })
+        UserMessageBubbleComponent(message = previewTextMessage, onEditClick = { })
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun UserMessageBubbleImagePreview() {
+private fun UserMessageBubbleComponentImagePreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        UserMessageBubble(message = previewImageMessage, onEditClick = { })
+        UserMessageBubbleComponent(message = previewImageMessage, onEditClick = { })
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun ImagePlaceholderPreview() {
+private fun ComponentImagePlaceholderPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        ImagePlaceholder()
+        ComponentImagePlaceholder()
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun EditButtonPreview() {
+private fun ComponentEditButtonPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        EditButton(onClick = { })
+        ComponentEditButton(onClick = { })
     }
 }
 

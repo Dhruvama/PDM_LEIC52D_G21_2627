@@ -91,6 +91,9 @@ private fun AppColors.toColorScheme(): ColorScheme {
     // (darker on light themes, lighter on dark ones).
     fun raised(fraction: Float) = lerp(surface, textPrimary, fraction)
 
+    // Between the two accents, so tertiary differs from primary and secondary.
+    val midAccent = lerp(topAccent, bottomAccent, 0.5f)
+
     return base.copy(
         primary = accent,
         onPrimary = onAccent,
@@ -103,9 +106,9 @@ private fun AppColors.toColorScheme(): ColorScheme {
         secondaryContainer = lerp(surface, bottomAccent, 0.2f),
         onSecondaryContainer = textPrimary,
 
-        tertiary = topAccent,
-        onTertiary = topAccent.contentColor(),
-        tertiaryContainer = lerp(surface, topAccent, 0.2f),
+        tertiary = midAccent,
+        onTertiary = midAccent.contentColor(),
+        tertiaryContainer = lerp(surface, midAccent, 0.2f),
         onTertiaryContainer = textPrimary,
 
         background = background,

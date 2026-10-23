@@ -37,7 +37,7 @@ import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
-import isel.pdm.droidmentor.ui.theme.modifiers.glass
+import isel.pdm.droidmentor.ui.theme.modifiers.layeredGlass
 
 const val CHAT_HISTORY_ITEM_TAG = "chat_history_item"
 
@@ -57,75 +57,21 @@ fun ChatHistoryItem(
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
-    val shape = RoundedCornerShape(20.dp)
     val title = chat.title ?: stringResource(R.string.new_chat)
-
-    // E.g. "5 min ago" / "há 5 min", in the device's language
-    val updated = remember(chat.lastUpdatedMillis) {
-        DateUtils.getRelativeTimeSpanString(
-            chat.lastUpdatedMillis,
-            System.currentTimeMillis(),
-            DateUtils.MINUTE_IN_MILLIS,
-            DateUtils.FORMAT_ABBREV_RELATIVE,
-        ).toString()
-    }
-    // Zero has its own string: in Portuguese the "one" plural also covers 0
-    val count = if (chat.messageCount == 0) {
-        stringResource(R.string.chat_history_message_count_zero)
-    } else {
-        pluralStringResource(
-            R.plurals.chat_history_message_count,
-            chat.messageCount,
-            chat.messageCount,
-        )
-    }
 
     Row(
         modifier = modifier
-            .glass(c, shape)
-            .clip(shape)
+            .layeredGlass(c, RoundedCornerShape(20.dp))
             .clickable(onClick = onClick)
             .padding(start = 14.dp, top = 12.dp, bottom = 12.dp, end = 4.dp)
             .testTag(CHAT_HISTORY_ITEM_TAG),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(c.crossGradient),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                (title.firstOrNull { it.isLetterOrDigit() } ?: '?').uppercase(),
-                color = c.onCrossGradient,
-                fontWeight = FontWeight.Bold,
-            )
-        }
+        ChatAvatar(title = title)
 
         Spacer(Modifier.width(14.dp))
 
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                title,
-                color = c.textPrimary,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                chat.lastMessage,
-                style = MaterialTheme.typography.bodyMedium,
-                color = c.textSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                "$updated · $count",
-                style = MaterialTheme.typography.labelSmall,
-                color = c.accent,
-            )
-        }
+        ChatInfo(title = title, chat = chat, modifier = Modifier.weight(1f))
 
         IconButton(onClick = onDeleteClick) {
             Icon(
@@ -136,6 +82,72 @@ fun ChatHistoryItem(
         }
     }
 }
+
+/** Gradient circle with the first letter (or digit) of [title]. */
+@Composable
+private fun ChatAvatar(title: String, modifier: Modifier = Modifier) {
+    val c = LocalAppColors.current
+    Box(
+        modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(c.crossGradient),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            (title.firstOrNull { it.isLetterOrDigit() } ?: '?').uppercase(),
+            color = c.onCrossGradient,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+/** Title, preview of the last message and the "updated · count" line. */
+@Composable
+private fun ChatInfo(title: String, chat: ChatSummary, modifier: Modifier = Modifier) {
+    val c = LocalAppColors.current
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            title,
+            color = c.textPrimary,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            chat.lastMessage,
+            style = MaterialTheme.typography.bodyMedium,
+            color = c.textSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            "${relativeTime(chat.lastUpdatedMillis)} · ${messageCountText(chat.messageCount)}",
+            style = MaterialTheme.typography.labelSmall,
+            color = c.accent,
+        )
+    }
+}
+
+/** E.g. "5 min ago" / "há 5 min", in the device's language. */
+@Composable
+private fun relativeTime(millis: Long): String = remember(millis) {
+    DateUtils.getRelativeTimeSpanString(
+        millis,
+        System.currentTimeMillis(),
+        DateUtils.MINUTE_IN_MILLIS,
+        DateUtils.FORMAT_ABBREV_RELATIVE,
+    ).toString()
+}
+
+/** E.g. "4 messages". Zero has its own string: in Portuguese the "one" plural also covers 0. */
+@Composable
+private fun messageCountText(count: Int): String =
+    if (count == 0) {
+        stringResource(R.string.chat_history_message_count_zero)
+    } else {
+        pluralStringResource(R.plurals.chat_history_message_count, count, count)
+    }
 
 @Preview(widthDp = 400)
 @Composable

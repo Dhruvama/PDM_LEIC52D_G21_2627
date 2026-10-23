@@ -27,12 +27,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.buildLogTag
-import isel.pdm.droidmentor.activechat.components.ChatComposer
-import isel.pdm.droidmentor.activechat.components.ChatTopBar
-import isel.pdm.droidmentor.activechat.components.ErrorBanner
-import isel.pdm.droidmentor.activechat.components.MessageList
-import isel.pdm.droidmentor.activechat.components.OfflineBanner
-import isel.pdm.droidmentor.activechat.components.ParticleLogoColors
+import isel.pdm.droidmentor.activechat.components.ChatInputComponent
+import isel.pdm.droidmentor.activechat.components.ChatTopBarComponent
+import isel.pdm.droidmentor.activechat.components.ErrorBannerComponent
+import isel.pdm.droidmentor.activechat.components.MessageListComponent
+import isel.pdm.droidmentor.activechat.components.OfflineBannerComponent
+import isel.pdm.droidmentor.ui.components.animations.particlelogo.ParticleLogoColors
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
@@ -51,46 +51,55 @@ private val logTag = buildLogTag("ActiveChatScreen")
  * @param assembleLogo `true` when coming from the Title screen, so the welcome's logo
  * gathers from its cloud.
  * @param onBack Called when the user taps the back button.
+ * @param onHistory Called when the user taps the history button.
  */
 @Composable
-fun ActiveChatScreen(viewModel: ActiveChatScreenViewModel, assembleLogo: Boolean, onBack: () -> Unit) {
+fun ActiveChatScreen(
+    viewModel: ActiveChatScreenViewModel,
+    assembleLogo: Boolean,
+    onBack: () -> Unit,
+    onHistory: () -> Unit,
+) {
     val clipboard = LocalClipboardManager.current
     // The content handles the insets and draws its own background.
-    Scaffold(containerColor = Color.Transparent, contentWindowInsets = WindowInsets(0)) { _ ->
-        ActiveChatScreenContent(
-            state = viewModel.state,
-            assembleLogo = assembleLogo,
-            onBackClick = onBack,
-            onOptionsClick = {
-                Log.v(logTag, "Options clicked")
-                // TODO: options menu
-            },
-            onInputChange = { viewModel.updateInput(it) },
-            onAttachClick = {
-                Log.v(logTag, "Attach clicked")
-                // TODO (phase E): pick an image from the gallery
-            },
-            onCameraClick = {
-                Log.v(logTag, "Camera clicked")
-                // TODO (phase E): take a photo
-            },
-            onRemoveAttachment = { viewModel.removeAttachedImage() },
-            onSendClick = { viewModel.send() },
-            onEditMessage = {
-                Log.v(logTag, "Edit message ${it.id} clicked")
-                // TODO (phase D): edit the message
-            },
-            onCopyMessage = { clipboard.setText(AnnotatedString(it.text)) },
-            onRegenerateMessage = {
-                Log.v(logTag, "Regenerate message ${it.id} clicked")
-                // TODO (phase D): regenerate the reply
-            },
-            onRetryClick = {
-                Log.v(logTag, "Retry clicked")
-                // TODO (phase C): retry the request to Gemini
-            },
-            onDismissError = { viewModel.dismissError() },
-        )
+    Scaffold(containerColor = Color.Transparent, contentWindowInsets = WindowInsets(0)) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            ActiveChatScreenContent(
+                state = viewModel.state,
+                assembleLogo = assembleLogo,
+                onBackClick = onBack,
+                onHistoryClick = onHistory,
+                onOptionsClick = {
+                    Log.v(logTag, "Options clicked")
+                    // TODO: options menu
+                },
+                onInputChange = { viewModel.updateInput(it) },
+                onAttachClick = {
+                    Log.v(logTag, "Attach clicked")
+                    // TODO (phase E): pick an image from the gallery
+                },
+                onCameraClick = {
+                    Log.v(logTag, "Camera clicked")
+                    // TODO (phase E): take a photo
+                },
+                onRemoveAttachment = { viewModel.removeAttachedImage() },
+                onSendClick = { viewModel.send() },
+                onEditMessage = {
+                    Log.v(logTag, "Edit message ${it.id} clicked")
+                    // TODO (phase D): edit the message
+                },
+                onCopyMessage = { clipboard.setText(AnnotatedString(it.text)) },
+                onRegenerateMessage = {
+                    Log.v(logTag, "Regenerate message ${it.id} clicked")
+                    // TODO (phase D): regenerate the reply
+                },
+                onRetryClick = {
+                    Log.v(logTag, "Retry clicked")
+                    // TODO (phase C): retry the request to Gemini
+                },
+                onDismissError = { viewModel.dismissError() },
+            )
+        }
     }
 }
 
@@ -100,9 +109,10 @@ fun ActiveChatScreen(viewModel: ActiveChatScreenViewModel, assembleLogo: Boolean
  *
  * @param state What the screen shows.
  * @param onBackClick Called when the user taps the back button.
+ * @param onHistoryClick Called when the user taps the history button.
  * @param onOptionsClick Called when the user taps the options button.
  * @param onInputChange Called with the new text whenever the user types.
- * @param onAttachClick Called when the user taps the attach button.
+ * @param onAttachClick Called when the user taps the attachment button.
  * @param onCameraClick Called when the user taps the camera button.
  * @param onRemoveAttachment Called when the user removes the attached image.
  * @param onSendClick Called when the user taps the send button.
@@ -120,6 +130,7 @@ fun ActiveChatScreen(viewModel: ActiveChatScreenViewModel, assembleLogo: Boolean
 private fun ActiveChatScreenContent(
     state: ActiveChatScreenState,
     onBackClick: () -> Unit,
+    onHistoryClick: () -> Unit,
     onOptionsClick: () -> Unit,
     onInputChange: (String) -> Unit,
     onAttachClick: () -> Unit,
@@ -141,22 +152,23 @@ private fun ActiveChatScreenContent(
             .testTag(ACTIVE_CHAT_SCREEN_TAG),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            ChatTopBar(
+            ChatTopBarComponent(
                 title = state.chatTitle ?: stringResource(R.string.new_chat),
                 onBackClick = onBackClick,
+                onHistoryClick = onHistoryClick,
                 onOptionsClick = onOptionsClick,
             )
             if (state.isOffline) {
-                OfflineBanner()
+                OfflineBannerComponent()
             }
             if (state.status is ChatStatus.Failed) {
-                ErrorBanner(
+                ErrorBannerComponent(
                     message = failureText(state.status.reason),
                     onRetryClick = onRetryClick,
                     onDismissClick = onDismissError,
                 )
             }
-            MessageList(
+            MessageListComponent(
                 messages = state.messages,
                 isWaitingForReply = state.status is ChatStatus.Waiting,
                 onEditMessage = onEditMessage,
@@ -167,12 +179,12 @@ private fun ActiveChatScreenContent(
                 logoColors = logoColors,
                 modifier = Modifier.weight(1f),
             )
-            ChatComposer(
+            ChatInputComponent(
                 text = state.inputText,
                 onTextChange = onInputChange,
                 attachedImage = state.attachedImage,
                 onRemoveAttachment = onRemoveAttachment,
-                isInputEnabled = state.status !is ChatStatus.Waiting && !state.isOffline,
+                isInputEnabled = !state.isOffline,
                 isSendEnabled = state.canSend,
                 onAttachClick = onAttachClick,
                 onCameraClick = onCameraClick,
@@ -222,6 +234,7 @@ private fun ActiveChatScreenNormalPreview() {
         ActiveChatScreenContent(
             state = previewNormalState,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -244,6 +257,7 @@ private fun ActiveChatScreenNewChatPreview() {
         ActiveChatScreenContent(
             state = ActiveChatScreenState(),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -266,6 +280,7 @@ private fun ActiveChatScreenNewChatWithCustomLogoColorsPreview() {
         ActiveChatScreenContent(
             state = ActiveChatScreenState(),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -294,6 +309,7 @@ private fun ActiveChatScreenWaitingPreview() {
         ActiveChatScreenContent(
             state = previewNormalState.copy(status = ChatStatus.Waiting),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -316,6 +332,7 @@ private fun ActiveChatScreenOfflinePreview() {
         ActiveChatScreenContent(
             state = previewNormalState.copy(isOffline = true),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -338,6 +355,7 @@ private fun ActiveChatScreenErrorPreview() {
         ActiveChatScreenContent(
             state = previewNormalState.copy(status = ChatStatus.Failed(FailureReason.RATE_LIMITED)),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -360,6 +378,7 @@ private fun ActiveChatScreenInvalidKeyPreview() {
         ActiveChatScreenContent(
             state = previewNormalState.copy(status = ChatStatus.Failed(FailureReason.INVALID_KEY)),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -385,6 +404,7 @@ private fun ActiveChatScreenWithAttachmentPreview() {
                 attachedImage = Uri.EMPTY,
             ),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -407,6 +427,7 @@ private fun ActiveChatScreenLightThemePreview() {
         ActiveChatScreenContent(
             state = previewNormalState,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -429,6 +450,7 @@ private fun ActiveChatScreenVioletThemePreview() {
         ActiveChatScreenContent(
             state = previewNormalState,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -451,6 +473,7 @@ private fun ActiveChatScreenLandscapePreview() {
         ActiveChatScreenContent(
             state = previewNormalState,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -473,6 +496,7 @@ private fun ActiveChatScreenNewChatLandscapePreview() {
         ActiveChatScreenContent(
             state = ActiveChatScreenState(),
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { },
             onAttachClick = { },
@@ -496,6 +520,7 @@ private fun ActiveChatScreenInteractivePreview() {
         ActiveChatScreenContent(
             state = state,
             onBackClick = { },
+            onHistoryClick = { },
             onOptionsClick = { },
             onInputChange = { state = state.copy(inputText = it) },
             onAttachClick = { },

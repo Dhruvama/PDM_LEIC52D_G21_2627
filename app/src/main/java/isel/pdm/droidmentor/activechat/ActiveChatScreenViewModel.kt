@@ -67,6 +67,7 @@ class ActiveChatScreenViewModel : ViewModel() {
         Log.v(logTag, "init on ${hashCode()}")
     }
 
+    /** ViewModel life confirmation */
     override fun onCleared() {
         super.onCleared()
         Log.v(logTag, "onCleared() on ${hashCode()}")
@@ -76,31 +77,25 @@ class ActiveChatScreenViewModel : ViewModel() {
     var state by mutableStateOf(ActiveChatScreenState())
         private set
 
+    /** For now lives only in memory, TODO (pass this work to the database) */
     private var nextMessageId = 1L
 
     /**
      * Sets the text typed in the composer to [text].
-     * Ignored while waiting for the mentor's reply, because the input is disabled then.
+     * Allowed while waiting for the mentor's reply, so the user can write the next message;
+     * only [send] waits for the reply.
      */
     fun updateInput(text: String) {
-        if (state.status is ChatStatus.Waiting) {
-            Log.d(logTag, "updateInput ignored: waiting for a reply")
-            return
-        }
         state = state.copy(inputText = text)
     }
 
     /**
      * Attaches the image at [uri] to the message being written, replacing any previous one.
-     * Ignored while waiting for the mentor's reply.
+     * Allowed while waiting for the mentor's reply; the image stays in the composer until sent.
      *
      * In a later phase the file is copied to app storage before being kept.
      */
     fun attachImage(uri: Uri) {
-        if (state.status is ChatStatus.Waiting) {
-            Log.d(logTag, "attachImage ignored: waiting for a reply")
-            return
-        }
         state = state.copy(attachedImage = uri)
     }
 

@@ -9,6 +9,7 @@
     <!-- Active Chat: top bar -->
     <string name="new_chat">Nova conversa</string>
     <string name="chat_top_bar_back">Voltar</string>
+    <string name="chat_top_bar_history">Histórico</string>
     <string name="chat_top_bar_options">Mais opções</string>
 
     <!-- Active Chat: thinking indicator -->

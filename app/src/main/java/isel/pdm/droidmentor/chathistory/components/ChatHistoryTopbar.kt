@@ -1,7 +1,6 @@
 package isel.pdm.droidmentor.chathistory.components
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -24,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
@@ -43,32 +42,36 @@ import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
 @Composable
 fun ChatHistoryTopBar(onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     val c = LocalAppColors.current
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .windowInsetsPadding(
                 WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
             )
             .padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
             onClick = onBackClick,
             modifier = Modifier
+                .align(Alignment.CenterStart)
                 .size(44.dp)
-                .frostedGlass(c, CircleShape),) {
-
+                .frostedGlass(c, CircleShape),
+        ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = stringResource(R.string.chat_top_bar_back),
-                tint = c.textSecondary,
+                tint = c.topAccent,
             )
         }
-        Spacer(Modifier.width(4.dp))
+        // Horizontal padding keeps a long title from overlapping the back button
         Text(
             stringResource(R.string.chat_history_title),
             style = MaterialTheme.typography.headlineSmall.merge(TextStyle(brush = c.crossGradient)),
             fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(horizontal = 48.dp),
         )
     }
 }

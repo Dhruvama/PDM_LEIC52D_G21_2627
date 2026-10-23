@@ -11,8 +11,9 @@ import kotlin.math.min
 /**
  * Represents the color specifications for the gradient glow effect.
  *
- * @property glow The primary glow color.
- * @property rawAccent The accent tied to this glow, before it is adjusted for contrast
+ * @property glow The color of the glow drawn in the background.
+ * @property rawAccent The accent tied to this glow, before it is adjusted for contrast.
+ * Same as [glow] unless the user unlinks them in the settings.
  */
 data class GlowSpec(
     val glow: Color,
@@ -36,10 +37,12 @@ data class AppColors(
     // Accents adjusted to be readable on the background
     val topAccent = top.rawAccent.readableOn(background)
     val bottomAccent = bottom.rawAccent.readableOn(background)
+
+    /** The app's highlight color (Material primary). */
     val accent = topAccent
     val onAccent = accent.contentColor()
 
-    // Surface slightly tinted by the accent, so it looks like the glow is reflected on it.
+    // Slightly tinted by the accent, as if the glow reflected on it.
     val surface =
         if (isLight) lerp(lerp(background, Color.White, 0.6f), topAccent, 0.04f)
         else lerp(lerp(background, Color.White, 0.04f), topAccent, 0.04f)
@@ -47,6 +50,7 @@ data class AppColors(
 
     val border = topAccent.copy(alpha = 0.18f)
     val borderSubtle = (if (isLight) Color.Black else Color.White).copy(alpha = 0.07f)
+    // Near-black / near-white instead of pure black / white.
     val textPrimary = if (isLight) Color(0xFF111411) else Color(0xFFF1F4F1)
     val textSecondary = textPrimary.copy(alpha = 0.6f)
 
@@ -54,6 +58,8 @@ data class AppColors(
 
     /** Black or white, readable along the whole [crossGradient]. */
     val onCrossGradient = bestContentColorOn(listOf(bottomAccent, topAccent))
+
+    // A glow shows less on a light background, so it needs more opacity there.
     val glowAlpha = if (isLight) 0.45f else 0.25f
 }
 

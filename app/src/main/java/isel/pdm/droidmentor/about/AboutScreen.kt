@@ -19,12 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +36,7 @@ import isel.pdm.droidmentor.about.components.GitHubButton
 import isel.pdm.droidmentor.about.components.InfoCard
 import isel.pdm.droidmentor.about.components.MemberRow
 import isel.pdm.droidmentor.about.components.MentorTip
+import isel.pdm.droidmentor.ui.components.animations.particledroid.ParticleDroid
 import isel.pdm.droidmentor.ui.theme.AppColors
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
@@ -60,13 +59,15 @@ private val professors = listOf("Prof. Paulo Pereira", "Prof. Diogo Cardoso")
  * The particle mascot at the top ([ParticleDroid]) scatters when tapped and gathers back
  * with a new tip.
  *
+ * @param version The app version shown in the header.
  * @param onNavigateToGitHub Called when the user taps the repository button.
  * @param onBack Called when the user taps the back button.
  */
 @Composable
 fun AboutScreen(
-    modifier: Modifier = Modifier,
+    version: String,
     onNavigateToGitHub: () -> Unit,
+    modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
 ) {
     val mentorTips = listOf(
@@ -80,11 +81,6 @@ fun AboutScreen(
     )
 
     val c = LocalAppColors.current
-    val context = LocalContext.current
-    val version = remember {
-        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
-            .getOrNull() ?: "1.0"
-    }
     var tipIndex by rememberSaveable { mutableIntStateOf(0) }
 
     CompositionLocalProvider(LocalContentColor provides c.textPrimary) {
@@ -147,7 +143,7 @@ fun AboutScreen(
 @Composable
 private fun AboutPreviewContent(colors: AppColors) {
     DroidMentorTheme(colors = colors) {
-        AboutScreen(onNavigateToGitHub = {})
+        AboutScreen(version = "1.0", onNavigateToGitHub = {})
     }
 }
 

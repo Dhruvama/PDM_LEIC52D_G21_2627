@@ -45,8 +45,8 @@ private const val DOT_DELAY_MILLIS = 200
  * @param modifier Modifier applied to the whole row.
  */
 @Composable
-fun ThinkingIndicator(modifier: Modifier = Modifier) {
-    val c = LocalAppColors.current
+fun ThinkingIndicatorComponent(modifier: Modifier = Modifier) {
+    val colors = LocalAppColors.current
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -54,20 +54,20 @@ fun ThinkingIndicator(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MentorAvatar(animated = true)
+        MentorAvatarComponent(animated = true)
         Spacer(modifier = Modifier.width(8.dp))
         Row(
             modifier = Modifier
-                .frostedGlass(c, CircleShape)
+                .frostedGlass(colors, CircleShape)
                 .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            WavingDots()
+            ComponentWavingDots()
             Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = stringResource(R.string.thinking_indicator_text),
                 style = MaterialTheme.typography.bodyMedium,
-                color = c.textSecondary,
+                color = colors.textSecondary,
             )
         }
     }
@@ -77,7 +77,7 @@ fun ThinkingIndicator(modifier: Modifier = Modifier) {
  * Three dots that fade in and out one after the other, like a wave.
  */
 @Composable
-private fun WavingDots() {
+private fun ComponentWavingDots() {
     val transition = rememberInfiniteTransition(label = "thinkingDots")
 
     val firstDotAlpha by transition.animateFloat(
@@ -112,9 +112,9 @@ private fun WavingDots() {
     )
 
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        Dot(alpha = firstDotAlpha)
-        Dot(alpha = secondDotAlpha)
-        Dot(alpha = thirdDotAlpha)
+        ComponentDot(alpha = firstDotAlpha)
+        ComponentDot(alpha = secondDotAlpha)
+        ComponentDot(alpha = thirdDotAlpha)
     }
 }
 
@@ -122,13 +122,13 @@ private fun WavingDots() {
  * One small round dot drawn with the given [alpha].
  */
 @Composable
-private fun Dot(alpha: Float) {
-    val c = LocalAppColors.current
+private fun ComponentDot(alpha: Float) {
+    val colors = LocalAppColors.current
     Box(
         modifier = Modifier
             .size(6.dp)
             .alpha(alpha)
-            .background(color = c.accent, shape = CircleShape),
+            .background(color = colors.accent, shape = CircleShape),
     )
 }
 
@@ -136,32 +136,32 @@ private fun Dot(alpha: Float) {
 
 @Preview(showBackground = true)
 @Composable
-private fun ThinkingIndicatorPreview() {
+private fun ThinkingIndicatorComponentPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        ThinkingIndicator()
+        ThinkingIndicatorComponent()
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun WavingDotsPreview() {
+private fun ComponentWavingDotsPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        WavingDots()
+        ComponentWavingDots()
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun DotFullPreview() {
+private fun ComponentDotFullPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        Dot(alpha = 1f)
+        ComponentDot(alpha = 1f)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun DotFadedPreview() {
+private fun ComponentDotFadedPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        Dot(alpha = 0.3f)
+        ComponentDot(alpha = 0.3f)
     }
 }

@@ -59,16 +59,17 @@ const val SEND_BUTTON_TAG = "send_button"
  * @param attachedImage Image attached and not yet sent, shown as a thumbnail above the text field,
  * or `null` if there is none.
  * @param onRemoveAttachment Called when the user taps the thumbnail's remove button.
- * @param isInputEnabled `false` when offline or waiting for a reply; disables the text field,
- * attach and camera buttons, and shows the offline placeholder.
- * @param isSendEnabled Whether the send button can be tapped. Computed by the caller.
+ * @param isInputEnabled `false` when offline; disables the text field, attach and camera buttons,
+ * and shows the offline placeholder. Stays `true` while waiting for a reply.
+ * @param isSendEnabled Whether the send button can be tapped. Computed by the caller; `false`
+ * while waiting for a reply.
  * @param onAttachClick Called when the user taps the attach button.
  * @param onCameraClick Called when the user taps the camera button.
  * @param onSendClick Called when the user taps the send button.
  * @param modifier Modifier applied to the composer card.
  */
 @Composable
-fun ChatComposer(
+fun ChatInputComponent(
     text: String,
     onTextChange: (String) -> Unit,
     attachedImage: Uri?,
@@ -80,18 +81,18 @@ fun ChatComposer(
     onSendClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalAppColors.current
+    val colors = LocalAppColors.current
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .frostedGlass(c, RoundedCornerShape(24.dp))
+            .frostedGlass(colors, RoundedCornerShape(24.dp))
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         if (attachedImage != null) {
-            AttachmentPreview(imageUri = attachedImage, onRemoveClick = onRemoveAttachment)
+            AttachmentComponent(imageUri = attachedImage, onRemoveClick = onRemoveAttachment)
         }
-        InputRow(
+        ComponentInputRow(
             text = text,
             onTextChange = onTextChange,
             isInputEnabled = isInputEnabled,
@@ -100,14 +101,14 @@ fun ChatComposer(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            ComposerIconButton(
+            ComponentAttachIconButton(
                 painter = painterResource(R.drawable.ic_attach_file),
                 contentDescription = stringResource(R.string.composer_attach),
                 enabled = isInputEnabled,
                 onClick = onAttachClick,
                 testTag = ATTACH_BUTTON_TAG,
             )
-            ComposerIconButton(
+            ComponentAttachIconButton(
                 painter = painterResource(R.drawable.ic_photo_camera),
                 contentDescription = stringResource(R.string.composer_camera),
                 enabled = isInputEnabled,
@@ -115,7 +116,7 @@ fun ChatComposer(
                 testTag = CAMERA_BUTTON_TAG,
             )
             Spacer(modifier = Modifier.weight(1f))
-            SendButton(enabled = isSendEnabled, onClick = onSendClick)
+            ComponentSendButton(enabled = isSendEnabled, onClick = onSendClick)
         }
     }
 }
@@ -124,17 +125,18 @@ fun ChatComposer(
  * Sparkle icon followed by the text field, which grows from 2 to 5 lines.
  */
 @Composable
-private fun InputRow(
+private fun ComponentInputRow(
     text: String,
     onTextChange: (String) -> Unit,
     isInputEnabled: Boolean,
 ) {
-    val c = LocalAppColors.current
-    val placeholder = if (isInputEnabled) {
-        stringResource(R.string.composer_placeholder)
-    } else {
-        stringResource(R.string.composer_placeholder_offline)
-    }
+    val colors = LocalAppColors.current
+    val placeholder =
+        if (isInputEnabled) {
+            stringResource(R.string.composer_placeholder)
+        } else {
+            stringResource(R.string.composer_placeholder_offline)
+        }
 
     Row(
         verticalAlignment = Alignment.Top,
@@ -143,7 +145,7 @@ private fun InputRow(
         Icon(
             painter = painterResource(R.drawable.ic_auto_awesome),
             contentDescription = null,
-            tint = c.textSecondary,
+            tint = colors.textSecondary,
             modifier = Modifier
                 .padding(top = 4.dp)
                 .size(18.dp),
@@ -153,9 +155,9 @@ private fun InputRow(
             onValueChange = onTextChange,
             enabled = isInputEnabled,
             textStyle = MaterialTheme.typography.bodyLarge.copy(
-                color = c.textPrimary,
+                color = colors.textPrimary,
             ),
-            cursorBrush = SolidColor(c.accent),
+            cursorBrush = SolidColor(colors.accent),
             minLines = 2,
             maxLines = 5,
             modifier = Modifier
@@ -167,7 +169,7 @@ private fun InputRow(
                         Text(
                             text = placeholder,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = c.textSecondary,
+                            color = colors.textSecondary,
                         )
                     }
                     innerTextField()
@@ -181,20 +183,20 @@ private fun InputRow(
  * A 44.dp round glass button with a 20.dp icon, used for attach and camera.
  */
 @Composable
-private fun ComposerIconButton(
+private fun ComponentAttachIconButton(
     painter: Painter,
     contentDescription: String,
     enabled: Boolean,
     onClick: () -> Unit,
     testTag: String,
 ) {
-    val c = LocalAppColors.current
-    val iconTint = if (enabled) c.textPrimary else c.textSecondary
+    val colors = LocalAppColors.current
+    val iconTint = if (enabled) colors.textPrimary else colors.textSecondary
 
     Box(
         modifier = Modifier
             .size(44.dp)
-            .frostedGlass(c, CircleShape),
+            .frostedGlass(colors, CircleShape),
     ) {
         IconButton(
             onClick = onClick,
@@ -218,22 +220,22 @@ private fun ComposerIconButton(
  * flat surface color when disabled.
  */
 @Composable
-private fun SendButton(enabled: Boolean, onClick: () -> Unit) {
-    val c = LocalAppColors.current
+private fun ComponentSendButton(enabled: Boolean, onClick: () -> Unit) {
+    val colors = LocalAppColors.current
     val backgroundModifier = if (enabled) {
         Modifier
             .shadow(
                 elevation = 12.dp,
                 shape = CircleShape,
-                ambientColor = c.accent,
-                spotColor = c.accent,
+                ambientColor = colors.accent,
+                spotColor = colors.accent,
             )
-            .background(brush = c.crossGradient, shape = CircleShape)
+            .background(brush = colors.crossGradient, shape = CircleShape)
     } else {
-        Modifier.background(color = c.surface, shape = CircleShape)
+        Modifier.background(color = colors.surface, shape = CircleShape)
     }
 
-    val iconTint = if (enabled) c.onCrossGradient else c.textSecondary
+    val iconTint = if (enabled) colors.onCrossGradient else colors.textSecondary
 
     Box(
         modifier = Modifier
@@ -261,9 +263,9 @@ private fun SendButton(enabled: Boolean, onClick: () -> Unit) {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ChatComposerEmptyPreview() {
+private fun ChatInputComponentEmptyPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        ChatComposer(
+        ChatInputComponent(
             text = "",
             onTextChange = { },
             attachedImage = null,
@@ -279,9 +281,9 @@ private fun ChatComposerEmptyPreview() {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ChatComposerWithTextPreview() {
+private fun ChatInputComponentWithTextPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        ChatComposer(
+        ChatInputComponent(
             text = previewShortText,
             onTextChange = { },
             attachedImage = null,
@@ -297,9 +299,9 @@ private fun ChatComposerWithTextPreview() {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ChatComposerMultiLinePreview() {
+private fun ChatInputComponentMultiLinePreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        ChatComposer(
+        ChatInputComponent(
             text = previewMultiLineText,
             onTextChange = { },
             attachedImage = null,
@@ -315,9 +317,9 @@ private fun ChatComposerMultiLinePreview() {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ChatComposerOfflinePreview() {
+private fun ChatInputComponentOfflinePreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        ChatComposer(
+        ChatInputComponent(
             text = "",
             onTextChange = { },
             attachedImage = null,
@@ -333,9 +335,9 @@ private fun ChatComposerOfflinePreview() {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ChatComposerWithAttachmentPreview() {
+private fun ChatInputComponentWithAttachmentPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        ChatComposer(
+        ChatInputComponent(
             text = previewAttachmentText,
             onTextChange = { },
             attachedImage = Uri.EMPTY,
@@ -351,9 +353,9 @@ private fun ChatComposerWithAttachmentPreview() {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ChatComposerLightThemePreview() {
+private fun ChatInputComponentLightThemePreview() {
     DroidMentorTheme(colors = DefaultLightColors) {
-        ChatComposer(
+        ChatInputComponent(
             text = previewShortText,
             onTextChange = { },
             attachedImage = null,
@@ -369,10 +371,10 @@ private fun ChatComposerLightThemePreview() {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun ChatComposerInteractivePreview() {
+private fun ChatInputComponentInteractivePreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
         var text by remember { mutableStateOf("") }
-        ChatComposer(
+        ChatInputComponent(
             text = text,
             onTextChange = { text = it },
             attachedImage = null,
@@ -388,17 +390,17 @@ private fun ChatComposerInteractivePreview() {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
-private fun InputRowPreview() {
+private fun ComponentInputRowPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        InputRow(text = previewShortText, onTextChange = { }, isInputEnabled = true)
+        ComponentInputRow(text = previewShortText, onTextChange = { }, isInputEnabled = true)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun ComposerIconButtonPreview() {
+private fun ComponentAttachIconButtonPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        ComposerIconButton(
+        ComponentAttachIconButton(
             painter = painterResource(R.drawable.ic_attach_file),
             contentDescription = stringResource(R.string.composer_attach),
             enabled = true,
@@ -410,17 +412,17 @@ private fun ComposerIconButtonPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun SendButtonEnabledPreview() {
+private fun ComponentSendButtonEnabledPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        SendButton(enabled = true, onClick = { })
+        ComponentSendButton(enabled = true, onClick = { })
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun SendButtonDisabledPreview() {
+private fun ComponentSendButtonDisabledPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
-        SendButton(enabled = false, onClick = { })
+        ComponentSendButton(enabled = false, onClick = { })
     }
 }
 

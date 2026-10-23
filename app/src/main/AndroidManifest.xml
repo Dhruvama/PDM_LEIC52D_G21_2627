@@ -56,6 +56,12 @@
             android:theme="@style/Theme.DroidMentor"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Ecrã de Histórico (ChatHistoryActivity) -->
+        <activity
+            android:name=".chathistory.ChatHistoryActivity"
+            android:exported="false"
+            android:theme="@style/Theme.DroidMentor" />
+
     </application>
 
 </manifest>

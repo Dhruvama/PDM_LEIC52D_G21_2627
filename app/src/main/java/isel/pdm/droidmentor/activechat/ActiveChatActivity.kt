@@ -11,6 +11,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.buildLogTag
+import isel.pdm.droidmentor.chathistory.ChatHistoryActivity
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 
 /**
@@ -43,21 +44,19 @@ class ActiveChatActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.v(logTag, "onCreate() on ${hashCode()}")
         enableEdgeToEdge()
-
         // Closing: the chat fades out over the screen behind it, which stays fully visible.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, R.anim.hold, android.R.anim.fade_out)
         }
-
         // Only the first time: after a rotation the logo must not re-assemble.
         val assembleLogo = savedInstanceState == null && intent.getBooleanExtra(EXTRA_ASSEMBLE_LOGO, false)
-
         setContent {
             DroidMentorTheme {
                 ActiveChatScreen(
                     viewModel = viewModel,
                     assembleLogo = assembleLogo,
                     onBack = { finish() },
+                    onHistory = { ChatHistoryActivity.navigateFrom(this@ActiveChatActivity) },
                 )
             }
         }
@@ -70,20 +69,5 @@ class ActiveChatActivity : ComponentActivity() {
             @Suppress("DEPRECATION")
             overridePendingTransition(R.anim.hold, android.R.anim.fade_out)
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Log.v(logTag, "onStart() on ${hashCode()}")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.v(logTag, "onStop() on ${hashCode()}")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.v(logTag, "onDestroy() on ${hashCode()}")
     }
 }
