@@ -32,6 +32,9 @@ import isel.pdm.droidmentor.activechat.components.ChatTopBarComponent
 import isel.pdm.droidmentor.activechat.components.ErrorBannerComponent
 import isel.pdm.droidmentor.activechat.components.MessageListComponent
 import isel.pdm.droidmentor.activechat.components.OfflineBannerComponent
+import isel.pdm.droidmentor.domain.chat.Author
+import isel.pdm.droidmentor.domain.chat.ChatMessage
+import isel.pdm.droidmentor.domain.chat.FailureReason
 import isel.pdm.droidmentor.ui.components.animations.particlelogo.ParticleLogoColors
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
@@ -548,7 +551,7 @@ private val previewMessages = listOf(
         id = 2L,
         author = Author.MENTOR,
         text = "Without stable keys, Compose identifies items by position. " +
-            "Adding an item shifts the positions, so every item looks new.",
+                "Adding an item shifts the positions, so every item looks new.",
     ),
     ChatMessage(
         id = 3L,

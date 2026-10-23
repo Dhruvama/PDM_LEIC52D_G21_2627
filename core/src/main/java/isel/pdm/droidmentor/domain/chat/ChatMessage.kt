@@ -1,6 +1,6 @@
-package isel.pdm.droidmentor.activechat
+package isel.pdm.droidmentor.domain.chat
 
-import android.net.Uri
+import java.net.URI
 
 /**
  * Who wrote a [ChatMessage]: the person using the app ([USER]) or the
@@ -10,8 +10,6 @@ enum class Author { USER, MENTOR }
 
 /**
  * A single message shown in the Active Chat screen.
- *
- * This is a UI model only; it carries no persistence or serialization concerns.
  *
  * @property id Unique identifier of the message within the chat.
  * @property author Who wrote the message.
@@ -23,5 +21,5 @@ data class ChatMessage(
     val id: Long,
     val author: Author,
     val text: String,
-    val imageUri: Uri? = null,
+    val imageUri: URI? = null,
 )

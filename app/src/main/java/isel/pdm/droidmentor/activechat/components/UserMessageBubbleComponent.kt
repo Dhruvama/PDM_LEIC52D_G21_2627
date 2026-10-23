@@ -1,6 +1,5 @@
 package isel.pdm.droidmentor.activechat.components
 
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -27,11 +26,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
-import isel.pdm.droidmentor.activechat.Author
-import isel.pdm.droidmentor.activechat.ChatMessage
+import isel.pdm.droidmentor.domain.chat.Author
+import isel.pdm.droidmentor.domain.chat.ChatMessage
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
+import java.net.URI
 
 const val USER_EDIT_BUTTON_TAG = "user_edit_button"
 
@@ -176,5 +176,5 @@ private val previewImageMessage = ChatMessage(
     id = 2L,
     author = Author.USER,
     text = "Why does my layout look like this?",
-    imageUri = Uri.EMPTY,
+    imageUri = URI.create("content://preview/image"),
 )

@@ -7,9 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import isel.pdm.droidmentor.buildLogTag
+import isel.pdm.droidmentor.domain.chat.Author
+import isel.pdm.droidmentor.domain.chat.ChatMessage
+import isel.pdm.droidmentor.domain.chat.FailureReason
+import java.net.URI
 
-/** Why the last request to the mentor failed. The screen turns it into a message; the ViewModel never holds UI text. */
-enum class FailureReason { RATE_LIMITED, SERVER_ERROR, INVALID_KEY, NO_CONNECTION, UNKNOWN }
 
 /** What the conversation is doing. Mutually exclusive, like PuzzleScreenState in the course example. */
 sealed class ChatStatus {
@@ -123,7 +125,7 @@ class ActiveChatScreenViewModel : ViewModel() {
             id = nextMessageId++,
             author = Author.USER,
             text = text,
-            imageUri = state.attachedImage,
+            imageUri = state.attachedImage?.let { URI.create(it.toString()) },
         )
         state = state.copy(
             messages = state.messages + message,

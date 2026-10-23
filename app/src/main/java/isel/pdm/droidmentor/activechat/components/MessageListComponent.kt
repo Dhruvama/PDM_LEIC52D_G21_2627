@@ -31,8 +31,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
-import isel.pdm.droidmentor.activechat.Author
-import isel.pdm.droidmentor.activechat.ChatMessage
+import isel.pdm.droidmentor.domain.chat.Author
+import isel.pdm.droidmentor.domain.chat.ChatMessage
 import isel.pdm.droidmentor.ui.components.animations.particlelogo.ParticleLogoColors
 import isel.pdm.droidmentor.ui.components.animations.particlelogo.ParticleLogoComponent
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
