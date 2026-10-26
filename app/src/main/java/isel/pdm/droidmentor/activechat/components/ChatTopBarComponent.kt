@@ -49,7 +49,7 @@ const val OPTIONS_BUTTON_TAG = "options_button"
  * @param title Title of the chat. Cut with an ellipsis if it does not fit in one line.
  * @param onBackClick Called when the user taps the back button.
  * @param onHistoryClick Called when the user taps the history button.
- * @param onOptionsClick Called when the user taps the options button.
+ * @param onSettingsClick Called when the user taps the options button.
  * @param modifier Modifier applied to the bar.
  */
 @Composable
@@ -57,7 +57,7 @@ fun ChatTopBarComponent(
     title: String,
     onBackClick: () -> Unit,
     onHistoryClick: () -> Unit,
-    onOptionsClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -89,7 +89,7 @@ fun ChatTopBarComponent(
         ComponentRoundIconButton(
             icon = Icons.Default.MoreVert,
             contentDescription = stringResource(R.string.chat_top_bar_options),
-            onClick = onOptionsClick,
+            onClick = onSettingsClick,
             testTag = OPTIONS_BUTTON_TAG,
         )
     }
@@ -161,7 +161,7 @@ private fun ChatTopBarComponentShortTitlePreview() {
             title = previewShortTitle,
             onBackClick = { },
             onHistoryClick = { },
-            onOptionsClick = { },
+            onSettingsClick = { },
         )
     }
 }
@@ -174,7 +174,7 @@ private fun ChatTopBarComponentLongTitlePreview() {
             title = previewLongTitle,
             onBackClick = { },
             onHistoryClick = { },
-            onOptionsClick = { },
+            onSettingsClick = { },
         )
     }
 }

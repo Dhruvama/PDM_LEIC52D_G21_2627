@@ -44,12 +44,17 @@ const val USER_EDIT_BUTTON_TAG = "user_edit_button"
  * @param message The message to show. Expected to have [Author.USER].
  * @param onEditClick Called when the user taps the edit button.
  * @param modifier Modifier applied to the whole row.
+ * @param canEdit `false` hides the edit button.
+ * @param isBeingEdited `true` when this message is the one being edited: the bubble gets an
+ * accent border.
  */
 @Composable
 fun UserMessageBubbleComponent(
     message: ChatMessage,
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier,
+    canEdit: Boolean = true,
+    isBeingEdited: Boolean = false,
 ) {
     val colors = LocalAppColors.current
     val bubbleShape = RoundedCornerShape(
@@ -58,6 +63,11 @@ fun UserMessageBubbleComponent(
         bottomEnd = 6.dp,
         bottomStart = 20.dp,
     )
+    val borderModifier = if (isBeingEdited) {
+        Modifier.border(width = 2.dp, color = colors.accent, shape = bubbleShape)
+    } else {
+        Modifier.border(width = 1.dp, color = colors.border, shape = bubbleShape)
+    }
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -67,7 +77,7 @@ fun UserMessageBubbleComponent(
             modifier = Modifier
                 .widthIn(max = 300.dp)
                 .background(color = colors.accentContainer, shape = bubbleShape)
-                .border(width = 1.dp, color = colors.border, shape = bubbleShape)
+                .then(borderModifier)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -80,8 +90,10 @@ fun UserMessageBubbleComponent(
                     style = MaterialTheme.typography.bodyLarge,
                     color = colors.textPrimary,
                 )
-                Row(modifier = Modifier.align(Alignment.End)) {
-                    ComponentEditButton(onClick = onEditClick)
+                if (canEdit) {
+                    Row(modifier = Modifier.align(Alignment.End)) {
+                        ComponentEditButton(onClick = onEditClick)
+                    }
                 }
             }
         }
@@ -147,6 +159,19 @@ private fun UserMessageBubbleComponentTextPreview() {
 private fun UserMessageBubbleComponentImagePreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
         UserMessageBubbleComponent(message = previewImageMessage, onEditClick = { })
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun UserMessageBubbleComponentBeingEditedPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        UserMessageBubbleComponent(
+            message = previewTextMessage,
+            onEditClick = { },
+            canEdit = false,
+            isBeingEdited = true,
+        )
     }
 }
 

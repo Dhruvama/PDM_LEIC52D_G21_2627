@@ -40,6 +40,9 @@ sealed class ChatStatus {
  * @property status What the conversation is doing: idle, waiting for the mentor's reply, or failed.
  * @property isOffline `true` when there is no network connection. Independent of [status]:
  * the network can drop in any status.
+ * @property editingMessageId Id of the user message being edited. Messages after it will be
+ * replaced when the edit is sent. `null` = not editing. While editing, [inputText] and
+ * [attachedImage] hold the edited message's text and image.
  */
 data class ActiveChatScreenState(
     val chatTitle: String? = null,
@@ -48,10 +51,16 @@ data class ActiveChatScreenState(
     val attachedImage: Uri? = null,
     val status: ChatStatus = ChatStatus.Idle,
     val isOffline: Boolean = false,
+    val editingMessageId: Long? = null,
 ) {
+    /** `true` while the user is editing one of their messages (see [editingMessageId]). */
+    val isEditing: Boolean
+        get() = editingMessageId != null
+
     /**
      * Whether the user can send right now: the conversation is idle, the device is online,
      * and there is some text or an attached image to send.
+     * The same rule applies when sending an edited message.
      */
     val canSend: Boolean
         get() = status is ChatStatus.Idle && !isOffline && (inputText.isNotBlank() || attachedImage != null)
@@ -135,6 +144,22 @@ class ActiveChatScreenViewModel : ViewModel() {
         )
         // TODO (phase B): save to Room
         // TODO (phase C): call Gemini
+    }
+
+    fun startEditing(message_id: Long){
+        TODO()
+    }
+
+    fun cancelEditing(){
+        TODO()
+    }
+
+    fun regenerateMessage(message_id: Long){
+        TODO()
+    }
+
+    fun retry(){
+        TODO()
     }
 
     /** Hides the error banner and returns to [ChatStatus.Idle]. Ignored if there is no error. */

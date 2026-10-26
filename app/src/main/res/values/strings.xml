@@ -47,6 +47,10 @@
     <string name="composer_attach">Attach image</string>
     <string name="composer_camera">Take photo</string>
     <string name="composer_send">Send</string>
+    <string name="composer_editing_title">Editing message</string>
+    <string name="composer_editing_warning">Messages after this one will be replaced.</string>
+    <string name="composer_cancel_editing">Cancel editing</string>
+    <string name="composer_resend_edited">Resend edited message</string>
 
     <!-- Active Chat: attachment preview -->
     <string name="attachment_remove">Remove attachment</string>

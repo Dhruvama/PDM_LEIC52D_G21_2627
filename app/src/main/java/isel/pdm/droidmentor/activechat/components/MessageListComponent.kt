@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -64,6 +65,8 @@ const val SUGGESTION_CHIP_TAG = "suggestion_chip"
  * @param assembleLogo `true` to make the welcome's logo gather from the Title screen's cloud
  * (entry transition). See [ParticleLogoComponent].
  * @param logoColors Colors of the welcome's logo chosen by the user, or `null` to use the theme.
+ * @param editingMessageId Id of the user message being edited, or `null` if not editing.
+ * See [ComponentMessages].
  * @param modifier Modifier applied to the list (or to the welcome's container when empty).
  */
 @Composable
@@ -77,6 +80,7 @@ fun MessageListComponent(
     modifier: Modifier = Modifier,
     assembleLogo: Boolean = false,
     logoColors: ParticleLogoColors? = null,
+    editingMessageId: Long? = null,
 ) {
     if (messages.isEmpty() && !isWaitingForReply) {
         Box(
@@ -97,6 +101,7 @@ fun MessageListComponent(
             onCopyMessage = onCopyMessage,
             onRegenerateMessage = onRegenerateMessage,
             modifier = modifier,
+            editingMessageId = editingMessageId,
         )
     }
 }
@@ -106,12 +111,16 @@ fun MessageListComponent(
  * Scrolls to the bottom whenever a message is added or the thinking indicator
  * appears or disappears.
  *
+ * While a message is being edited, it is highlighted, the messages after it are dimmed,
+ * the edit buttons are hidden, and the list scrolls to it.
+ *
  * @param messages Messages to show, oldest first.
  * @param isWaitingForReply `true` while the mentor's reply is pending.
  * @param onEditMessage Called with the user's message whose "Edit" button was tapped.
  * @param onCopyMessage Called with the mentor's message whose "Copy" button was tapped.
  * @param onRegenerateMessage Called with the mentor's message whose "Regenerate" button was tapped.
  * @param modifier Modifier applied to the list.
+ * @param editingMessageId Id of the user message being edited, or `null` if not editing.
  */
 @Composable
 private fun ComponentMessages(
@@ -121,8 +130,11 @@ private fun ComponentMessages(
     onCopyMessage: (ChatMessage) -> Unit,
     onRegenerateMessage: (ChatMessage) -> Unit,
     modifier: Modifier = Modifier,
+    editingMessageId: Long? = null,
 ) {
     val listState = rememberLazyListState()
+    // -1 when not editing.
+    val editIndex = messages.indexOfFirst { it.id == editingMessageId }
 
     LaunchedEffect(messages.size, isWaitingForReply) {
         var lastIndex = messages.size - 1
@@ -132,17 +144,34 @@ private fun ComponentMessages(
         }
     }
 
+    LaunchedEffect(editingMessageId) {
+        if (editIndex >= 0) listState.animateScrollToItem(editIndex)
+    }
+
     LazyColumn(
         state = listState,
         modifier = modifier.testTag(MESSAGE_LIST_TAG),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        items(messages, key = { it.id }, contentType = { it.author }) { message ->
+        itemsIndexed(
+            messages,
+            key = { _, message -> message.id },
+            contentType = { _, message -> message.author },
+        ) { i, message ->
+            // These messages will be replaced when the edit is sent.
+            val itemModifier = if (editIndex >= 0 && i > editIndex) {
+                Modifier.alpha(0.35f)
+            } else {
+                Modifier
+            }
             when (message.author) {
                 Author.USER -> UserMessageBubbleComponent(
                     message = message,
                     onEditClick = { onEditMessage(message) },
+                    modifier = itemModifier,
+                    canEdit = editingMessageId == null && !isWaitingForReply,
+                    isBeingEdited = message.id == editingMessageId,
                 )
                 Author.MENTOR -> MentorMessageBubbleComponent(
                     message = message,
@@ -150,6 +179,7 @@ private fun ComponentMessages(
                     onRegenerateClick = { onRegenerateMessage(message) },
                     // TODO: true for the message being streamed, once Gemini streaming exists
                     isAvatarAnimated = false,
+                    modifier = itemModifier,
                 )
             }
         }
@@ -322,6 +352,24 @@ private fun MessageListComponentWaitingPreview() {
                 onCopyMessage = { },
                 onRegenerateMessage = { },
                 onSuggestionClick = { },
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 400, heightDp = 640)
+@Composable
+private fun MessageListComponentEditingPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.fillMaxSize().glowBackground(LocalAppColors.current)) {
+            MessageListComponent(
+                messages = previewConversation,
+                isWaitingForReply = false,
+                onEditMessage = { },
+                onCopyMessage = { },
+                onRegenerateMessage = { },
+                onSuggestionClick = { },
+                editingMessageId = 1L,
             )
         }
     }

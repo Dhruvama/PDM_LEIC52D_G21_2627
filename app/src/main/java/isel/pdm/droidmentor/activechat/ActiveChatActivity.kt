@@ -12,6 +12,7 @@ import androidx.activity.viewModels
 import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.buildLogTag
 import isel.pdm.droidmentor.chathistory.ChatHistoryActivity
+import isel.pdm.droidmentor.settings.SettingsActivity
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 
 /**
@@ -57,6 +58,7 @@ class ActiveChatActivity : ComponentActivity() {
                     assembleLogo = assembleLogo,
                     onBack = { finish() },
                     onHistory = { ChatHistoryActivity.navigateFrom(this@ActiveChatActivity) },
+                    onSettings = { SettingsActivity.navigateFrom(this@ActiveChatActivity) }
                 )
             }
         }

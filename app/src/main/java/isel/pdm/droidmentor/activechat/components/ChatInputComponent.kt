@@ -16,6 +16,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +50,8 @@ const val MESSAGE_INPUT_TAG = "message_input"
 const val ATTACH_BUTTON_TAG = "attach_button"
 const val CAMERA_BUTTON_TAG = "camera_button"
 const val SEND_BUTTON_TAG = "send_button"
+const val EDITING_HEADER_TAG = "editing_header"
+const val CANCEL_EDIT_BUTTON_TAG = "cancel_edit_button"
 
 /**
  * The input bar at the bottom of the Active Chat screen: a text field with a sparkle icon,
@@ -67,6 +73,10 @@ const val SEND_BUTTON_TAG = "send_button"
  * @param onCameraClick Called when the user taps the camera button.
  * @param onSendClick Called when the user taps the send button.
  * @param modifier Modifier applied to the composer card.
+ * @param isEditing `true` while the user is editing a sent message: shows the editing header
+ * on top and a check icon on the send button. [text] and [attachedImage] then hold the
+ * edited message's text and image, and can be changed as usual.
+ * @param onCancelEdit Called when the user taps the editing header's cancel button.
  */
 @Composable
 fun ChatInputComponent(
@@ -80,6 +90,8 @@ fun ChatInputComponent(
     onCameraClick: () -> Unit,
     onSendClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isEditing: Boolean = false,
+    onCancelEdit: () -> Unit = {},
 ) {
     val colors = LocalAppColors.current
     Column(
@@ -89,6 +101,9 @@ fun ChatInputComponent(
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+        if (isEditing) {
+            ComponentEditingHeader(onCancelEdit = onCancelEdit)
+        }
         if (attachedImage != null) {
             AttachmentComponent(imageUri = attachedImage, onRemoveClick = onRemoveAttachment)
         }
@@ -116,8 +131,68 @@ fun ChatInputComponent(
                 testTag = CAMERA_BUTTON_TAG,
             )
             Spacer(modifier = Modifier.weight(1f))
-            ComponentSendButton(enabled = isSendEnabled, onClick = onSendClick)
+            ComponentSendButton(enabled = isSendEnabled, onClick = onSendClick, isEditing = isEditing)
         }
+    }
+}
+
+/**
+ * Shown on top of the composer while editing a message: an edit icon, the "Editing message"
+ * title with a warning that the following messages will be replaced, and a cancel button.
+ * A thin divider separates it from the rest of the composer.
+ */
+@Composable
+private fun ComponentEditingHeader(onCancelEdit: () -> Unit) {
+    val colors = LocalAppColors.current
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(EDITING_HEADER_TAG),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = null,
+                tint = colors.accent,
+                modifier = Modifier.size(16.dp),
+            )
+            Column {
+                Text(
+                    text = stringResource(R.string.composer_editing_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colors.textPrimary,
+                )
+                Text(
+                    text = stringResource(R.string.composer_editing_warning),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textSecondary,
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            ComponentCancelEditing(onCancelEdit = onCancelEdit)
+        }
+        HorizontalDivider(thickness = 1.dp, color = colors.borderSubtle)
+    }
+}
+
+/**
+ * Icon-only "X" button at the end of the editing header. Tapping it reports through
+ * [onCancelEdit] that the user wants to leave edit mode without resending the message.
+ */
+@Composable
+private fun ComponentCancelEditing(onCancelEdit: () -> Unit){
+    val colors = LocalAppColors.current
+    IconButton(
+        onClick = onCancelEdit,
+        modifier = Modifier.testTag(CANCEL_EDIT_BUTTON_TAG),
+    ) {
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = stringResource(R.string.composer_cancel_editing),
+            tint = colors.textSecondary,
+        )
     }
 }
 
@@ -217,10 +292,10 @@ private fun ComponentAttachIconButton(
 
 /**
  * Round 52.dp send button: the theme's cross gradient with an accent glow when enabled,
- * flat surface color when disabled.
+ * flat surface color when disabled. Shows a check icon instead of the send icon when [isEditing].
  */
 @Composable
-private fun ComponentSendButton(enabled: Boolean, onClick: () -> Unit) {
+private fun ComponentSendButton(enabled: Boolean, onClick: () -> Unit, isEditing: Boolean = false) {
     val colors = LocalAppColors.current
     val backgroundModifier = if (enabled) {
         Modifier
@@ -250,11 +325,19 @@ private fun ComponentSendButton(enabled: Boolean, onClick: () -> Unit) {
                 .fillMaxSize()
                 .testTag(SEND_BUTTON_TAG),
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = stringResource(R.string.composer_send),
-                tint = iconTint,
-            )
+            if (isEditing) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = stringResource(R.string.composer_resend_edited),
+                    tint = iconTint,
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = stringResource(R.string.composer_send),
+                    tint = iconTint,
+                )
+            }
         }
     }
 }
@@ -353,6 +436,26 @@ private fun ChatInputComponentWithAttachmentPreview() {
 
 @Preview(showBackground = true, widthDp = 360)
 @Composable
+private fun ChatInputComponentEditingPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        ChatInputComponent(
+            text = previewAttachmentText,
+            onTextChange = { },
+            attachedImage = Uri.EMPTY,
+            onRemoveAttachment = { },
+            isInputEnabled = true,
+            isSendEnabled = true,
+            onAttachClick = { },
+            onCameraClick = { },
+            onSendClick = { },
+            isEditing = true,
+            onCancelEdit = { },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
 private fun ChatInputComponentLightThemePreview() {
     DroidMentorTheme(colors = DefaultLightColors) {
         ChatInputComponent(
@@ -423,6 +526,30 @@ private fun ComponentSendButtonEnabledPreview() {
 private fun ComponentSendButtonDisabledPreview() {
     DroidMentorTheme(colors = DefaultDarkColors) {
         ComponentSendButton(enabled = false, onClick = { })
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ComponentSendButtonEditingPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        ComponentSendButton(enabled = true, onClick = { }, isEditing = true)
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun ComponentEditingHeaderPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        ComponentEditingHeader(onCancelEdit = { })
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ComponentCancelEditingPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        ComponentCancelEditing(onCancelEdit = { })
     }
 }
 
