@@ -9,7 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import isel.pdm.droidmentor.activechat.ActiveChatActivity
 import isel.pdm.droidmentor.buildLogTag
-import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
+import isel.pdm.droidmentor.UserTheme
 
 class ChatHistoryActivity : ComponentActivity() {
 
@@ -32,7 +32,7 @@ class ChatHistoryActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            DroidMentorTheme {
+            UserTheme {
                 ChatHistoryScreen(
                     viewModel = viewModel,
                     onBack = { finish() },

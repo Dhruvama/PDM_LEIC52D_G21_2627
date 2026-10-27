@@ -6,8 +6,8 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
 import androidx.core.net.toUri
+import isel.pdm.droidmentor.UserTheme
 
 private const val REPOSITORY_URL = "https://github.com/Dhruvama/PDM_LEIC52D_G21_2627"
 
@@ -29,7 +29,7 @@ class AboutActivity : ComponentActivity() {
         Log.v(logTag, "onCreate() on ${hashCode()}")
         enableEdgeToEdge()
         setContent {
-            DroidMentorTheme {
+            UserTheme {
                 AboutScreen(
                     version = appVersion(),
                     onNavigateToGitHub = ::navigateToGitHub,

@@ -13,7 +13,7 @@ import isel.pdm.droidmentor.R
 import isel.pdm.droidmentor.buildLogTag
 import isel.pdm.droidmentor.chathistory.ChatHistoryActivity
 import isel.pdm.droidmentor.settings.SettingsActivity
-import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
+import isel.pdm.droidmentor.UserTheme
 
 /**
  * Hosts the Active Chat screen. Opens and closes with a fade, so the transition
@@ -52,7 +52,7 @@ class ActiveChatActivity : ComponentActivity() {
         // Only the first time: after a rotation the logo must not re-assemble.
         val assembleLogo = savedInstanceState == null && intent.getBooleanExtra(EXTRA_ASSEMBLE_LOGO, false)
         setContent {
-            DroidMentorTheme {
+            UserTheme {
                 ActiveChatScreen(
                     viewModel = viewModel,
                     assembleLogo = assembleLogo,

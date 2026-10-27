@@ -7,11 +7,18 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.core.net.toUri
+import isel.pdm.droidmentor.DroidMentorApplication
+
 private const val API_KEY_URL = "https://aistudio.google.com/apikey"
 
 class SettingsActivity : ComponentActivity() {
     private val logTag = "SettingsActivity"
+    private val viewModel: SettingsViewModel by viewModels {
+        SettingsViewModel.factory(application as DroidMentorApplication)
+    }
+
     companion object {
         fun navigateFrom(origin: ComponentActivity) {
             val msg = Intent(origin, SettingsActivity::class.java)
@@ -24,10 +31,11 @@ class SettingsActivity : ComponentActivity() {
         Log.v(logTag, "onCreate() on ${hashCode()}")
         enableEdgeToEdge()
         setContent {
-            // The screen applies the theme itself, so the colors being edited show live
+            // A nova versão da SettingsScreen aceita o viewModel inteiro
             SettingsScreen(
+                viewModel = viewModel,
                 onGetApiKey = { openApiKeyPage() },
-                onBack = { finish() }
+                onBack = { finish() },
             )
         }
     }

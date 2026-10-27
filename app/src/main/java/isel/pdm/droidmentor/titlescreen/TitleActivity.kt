@@ -10,8 +10,7 @@ import isel.pdm.droidmentor.about.AboutActivity
 import isel.pdm.droidmentor.activechat.ActiveChatActivity
 import isel.pdm.droidmentor.chathistory.ChatHistoryActivity
 import isel.pdm.droidmentor.settings.SettingsActivity
-import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
-import isel.pdm.droidmentor.settings.AppColorsStore
+import isel.pdm.droidmentor.UserTheme
 
 // No shared Logging.kt was visible to me, so the tag is defined locally.
 private val logTag = "DroidMentor.TitleActivity"
@@ -36,7 +35,7 @@ class TitleActivity : ComponentActivity() {
         Log.v(logTag, "onCreate")
         enableEdgeToEdge()
         setContent {
-            DroidMentorTheme(colors = AppColorsStore.current) {
+            UserTheme {
                 TitleScreen(
                     onStartChat = {
                         ActiveChatActivity.navigateFrom(

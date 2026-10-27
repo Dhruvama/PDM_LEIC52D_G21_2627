@@ -92,23 +92,55 @@ enum class MentorLevel(val label: String) {
 }
 
 /**
+ * Root of the Settings screen: connects [viewModel] to the stateless screen content.
+ *
+ * @param viewModel Holds the colors and handles the user's actions.
+ * @param onGetApiKey Called when the user wants to create a key (opens Google AI Studio).
+ * @param onBack Called when the user taps the back button.
+ */
+@Composable
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onGetApiKey: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val actions = remember(viewModel, onGetApiKey, onBack) {
+        object : SettingsActions {
+            override fun onColorsChange(colors: AppColors) = viewModel.changeColors(colors)
+            override fun onColorsFinished() = viewModel.saveColors()
+            override fun onTopLinkedChange(linked: Boolean) = viewModel.changeTopLinked(linked)
+            override fun onBottomLinkedChange(linked: Boolean) = viewModel.changeBottomLinked(linked)
+            override fun onPresetSelect(preset: AppColors) = viewModel.applyPreset(preset)
+            override fun onUseSystemColors() = viewModel.useSystemColors()
+            // `.invoke()` calls the screen's parameters, not this object's own functions.
+            override fun onGetApiKey() = onGetApiKey.invoke()
+            override fun onBack() = onBack.invoke()
+        }
+    }
+    SettingsScreenContent(state = viewModel.state, actions = actions, modifier = modifier)
+}
+
+/**
  * Settings screen: Gemini API key and model, how the mentor answers and the app colors.
  * The whole screen uses the colors being edited, so the theme changes show live.
  * Custom colors are edited in a separate full-screen editor ([ColorEditor]),
  * so the preview stays visible while the colors change.
  *
- * For now everything lives only in memory. The places that will read or
- * write persistent data are marked with TODO.
+ * Stateless: every user action goes to [actions].
  *
- * @param onGetApiKey Called when the user wants to create a key (opens Google AI Studio).
+ * @param state What the screen shows.
+ * @param actions What happens when the user interacts with the screen.
+ * @param modifier Modifier for the screen's root.
  */
 @Composable
-fun SettingsScreen(
-    onGetApiKey: () -> Unit,
-    onBack: () -> Unit = {},
+private fun SettingsScreenContent(
+    state: SettingsScreenState,
+    actions: SettingsActions,
     modifier: Modifier = Modifier,
 ) {
     val system = systemAppColors()
+    val draft = state.colors ?: system
 
     // TODO carregar a API key guardada (de forma segura, p.ex. cifrada)
     var apiKey by rememberSaveable { mutableStateOf("") }
@@ -118,17 +150,9 @@ fun SettingsScreen(
     var codeExamples by rememberSaveable { mutableStateOf(true) }
     var shortAnswers by rememberSaveable { mutableStateOf(false) }
 
-    // TODO carregar as cores guardadas (se não houver, usar as do sistema)
-    var draft by remember { mutableStateOf(AppColorsStore.current ?: system) }
-    var topLinked by remember { mutableStateOf(true) }
-    var bottomLinked by remember { mutableStateOf(true) }
-
     var editingColors by rememberSaveable { mutableStateOf(false) }
     // Hoisted so the settings keep their scroll position after closing the editor
     val settingsScroll = rememberScrollState()
-
-    // TODO guardar as cores (e se os acentos estão ligados) e aplicá-las a toda a app
-    fun saveColors(colors: AppColors = draft) { AppColorsStore.current = colors }
 
     DroidMentorTheme(colors = draft) {
         val c = LocalAppColors.current
@@ -142,12 +166,12 @@ fun SettingsScreen(
                 if (editing) {
                     ColorEditor(
                         draft = draft,
-                        topLinked = topLinked,
-                        bottomLinked = bottomLinked,
-                        onDraftChange = { draft = it },
-                        onTopLinkedChange = { topLinked = it },
-                        onBottomLinkedChange = { bottomLinked = it },
-                        onFinished = ::saveColors,
+                        topLinked = state.topLinked,
+                        bottomLinked = state.bottomLinked,
+                        onDraftChange = actions::onColorsChange,
+                        onTopLinkedChange = actions::onTopLinkedChange,
+                        onBottomLinkedChange = actions::onBottomLinkedChange,
+                        onFinished = actions::onColorsFinished,
                         onClose = { editingColors = false }
                     )
                 } else {
@@ -165,7 +189,7 @@ fun SettingsScreen(
                         val content = Modifier.widthIn(max = 560.dp).fillMaxWidth()
 
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-                            IconButton(onClick = onBack) {
+                            IconButton(onClick = actions::onBack) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = "Voltar",
@@ -196,7 +220,7 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = c.textSecondary
                             )
-                            TextButton(onClick = onGetApiKey, modifier = Modifier.align(Alignment.End)) {
+                            TextButton(onClick = actions::onGetApiKey, modifier = Modifier.align(Alignment.End)) {
                                 Text("Obter uma chave  ↗")
                             }
 
@@ -236,12 +260,7 @@ fun SettingsScreen(
                             Label("Temas prontos")
                             PresetRow(
                                 selected = draft,
-                                onSelect = { preset ->
-                                    draft = preset
-                                    topLinked = preset.top.rawAccent == preset.top.glow
-                                    bottomLinked = preset.bottom.rawAccent == preset.bottom.glow
-                                    saveColors(preset)
-                                }
+                                onSelect = actions::onPresetSelect
                             )
 
                             Label("Modo")
@@ -249,9 +268,10 @@ fun SettingsScreen(
                                 options = listOf(false to "Escuro", true to "Claro"),
                                 selected = c.isLight,
                                 onSelect = { light ->
-                                    val updated = draft.copy(background = draft.background.toBackground(light))
-                                    draft = updated
-                                    saveColors(updated)
+                                    actions.onColorsChange(
+                                        draft.copy(background = draft.background.toBackground(light))
+                                    )
+                                    actions.onColorsFinished()
                                 }
                             )
                         }
@@ -279,14 +299,7 @@ fun SettingsScreen(
                             Text("›", style = MaterialTheme.typography.titleLarge, color = c.accent)
                         }
 
-                        TextButton(
-                            onClick = {
-                                AppColorsStore.current = null
-                                draft = system
-                                topLinked = true
-                                bottomLinked = true
-                            }
-                        ) {
+                        TextButton(onClick = actions::onUseSystemColors) {
                             Text(
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) "Usar cores do sistema"
                                 else "Repor cores"
@@ -298,6 +311,207 @@ fun SettingsScreen(
         }
     }
 }
+/**
+ * Settings screen: Gemini API key and model, how the mentor answers and the app colors.
+ * The whole screen uses the colors being edited, so the theme changes show live.
+ * Custom colors are edited in a separate full-screen editor ([ColorEditor]),
+ * so the preview stays visible while the colors change.
+ *
+ * For now everything lives only in memory. The places that will read or
+ * write persistent data are marked with TODO.
+ *
+ * @param onGetApiKey Called when the user wants to create a key (opens Google AI Studio).
+ */
+//@Composable
+//fun SettingsScreen(
+//    state: SettingsScreenState,
+//    onColorsChange: (AppColors) -> Unit,
+//    onColorsFinished: () -> Unit,
+//    onTopLinkedChange: (Boolean) -> Unit,
+//    onBottomLinkedChange: (Boolean) -> Unit,
+//    onPresetSelect: (AppColors) -> Unit,
+//    onUseSystemColors: () -> Unit,
+//    onGetApiKey: () -> Unit,
+//    onBack: () -> Unit = {},
+//    modifier: Modifier = Modifier,
+//) {
+//
+//    val system = systemAppColors()
+//    val draft = state.colors ?: system
+//    // TODO carregar a API key guardada (de forma segura, p.ex. cifrada)
+//    var apiKey by rememberSaveable { mutableStateOf("") }
+//    // TODO carregar o modelo, o nível e as preferências do mentor guardados
+//    var model by rememberSaveable { mutableStateOf(geminiModels.first().first) }
+//    var level by rememberSaveable { mutableStateOf(MentorLevel.INTERMEDIATE) }
+//    var codeExamples by rememberSaveable { mutableStateOf(true) }
+//    var shortAnswers by rememberSaveable { mutableStateOf(false) }
+//
+//    var editingColors by rememberSaveable { mutableStateOf(false) }
+//    // Hoisted so the settings keep their scroll position after closing the editor
+//    val settingsScroll = rememberScrollState()
+//
+//    // TODO guardar as cores (e se os acentos estão ligados) e aplicá-las a toda a app
+//
+//    DroidMentorTheme(colors = draft) {
+//        val c = LocalAppColors.current
+//        CompositionLocalProvider(LocalContentColor provides c.textPrimary) {
+//            AnimatedContent(
+//                targetState = editingColors,
+//                transitionSpec = { fadeIn() togetherWith fadeOut() },
+//                modifier = modifier,
+//                label = "colorEditor"
+//            ) { editing ->
+//                if (editing) {
+//                    ColorEditor(
+//                        draft = draft,
+//                        topLinked = state.topLinked,
+//                        bottomLinked = state.bottomLinked,
+//                        onDraftChange = onColorsChange,
+//                        onTopLinkedChange = onTopLinkedChange,
+//                        onBottomLinkedChange = onBottomLinkedChange,
+//                        onFinished = onColorsFinished,
+//                        onClose = { editingColors = false }
+//                    )
+//                } else {
+//                    Column(
+//                        Modifier
+//                            .fillMaxSize()
+//                            .glowBackground(c)
+//                            .safeDrawingPadding()
+//                            .verticalScroll(settingsScroll)
+//                            .padding(horizontal = 20.dp, vertical = 24.dp),
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                        verticalArrangement = Arrangement.spacedBy(20.dp)
+//                    ) {
+//                        // Keeps the cards readable on tablets and in landscape
+//                        val content = Modifier.widthIn(max = 560.dp).fillMaxWidth()
+//
+//                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+//                            IconButton(onClick = onBack) {
+//                                Icon(
+//                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+//                                    contentDescription = "Voltar",
+//                                    tint = c.textSecondary
+//                                )
+//                            }
+//                        }
+//
+//                        Column(content, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+//                            Text(
+//                                "Definições",
+//                                style = MaterialTheme.typography.headlineMedium.merge(
+//                                    TextStyle(brush = c.crossGradient)
+//                                ),
+//                                fontWeight = FontWeight.Bold
+//                            )
+//                            Text("Ajusta o mentor à tua maneira.", color = c.textSecondary)
+//                        }
+//
+//                        SectionCard("Gemini", content) {
+//                            ApiKeyField(
+//                                value = apiKey,
+//                                // TODO guardar a API key quando o utilizador acabar de a escrever
+//                                onValueChange = { apiKey = it.trim() }
+//                            )
+//                            Text(
+//                                "A chave fica só neste dispositivo e é enviada apenas ao Gemini.",
+//                                style = MaterialTheme.typography.bodySmall,
+//                                color = c.textSecondary
+//                            )
+//                            TextButton(onClick = onGetApiKey, modifier = Modifier.align(Alignment.End)) {
+//                                Text("Obter uma chave  ↗")
+//                            }
+//
+//                            Label("Modelo")
+//                            SegmentedPill(
+//                                options = listOf(false to "Escuro", true to "Claro"),
+//                                selected = c.isLight,
+//                                onSelect = { light ->
+//                                    onColorsChange(draft.copy(background = draft.background.toBackground(light)))
+//                                    onColorsFinished()
+//                                    onSelect = { model = it }
+//                                }
+//                            )
+//                        }
+//
+//                        SectionCard("Mentor", content) {
+//                            Label("Nível das respostas")
+//                            SegmentedPill(
+//                                options = listOf(false to "Escuro", true to "Claro"),
+//                                selected = c.isLight,
+//                                onSelect = { light ->
+//                                    onColorsChange(draft.copy(background = draft.background.toBackground(light)))
+//                                    onColorsFinished()
+//                                }
+//                            )
+//                            // TODO guardar as duas opções abaixo
+//                            SwitchRow(
+//                                "Incluir exemplos de código",
+//                                "Kotlin e Compose sempre que fizer sentido.",
+//                                codeExamples
+//                            ) { codeExamples = it }
+//                            SwitchRow(
+//                                "Respostas curtas",
+//                                "Vai direto ao assunto, sem rodeios.",
+//                                shortAnswers
+//                            ) { shortAnswers = it }
+//                        }
+//
+//                        SectionCard("Aparência", content) {
+//                            ThemePreview(Modifier.height(220.dp))
+//
+//                            Label("Temas prontos")
+//                            PresetRow(
+//                                selected = draft,
+//                                onSelect = onPresetSelect
+//                            )
+//
+//                            Label("Modo")
+//                            SegmentedPill(
+//                                options = listOf(false to "Escuro", true to "Claro"),
+//                                selected = c.isLight,
+//                                onSelect = { light ->
+//                                    onColorsChange(draft.copy(background = draft.background.toBackground(light)))
+//                                    onColorsFinished()
+//                                }
+//                            )
+//                        }
+//
+//                        // Opens the full-screen editor
+//                        Row(
+//                            content
+//                                .glass(c)
+//                                .clickable(role = Role.Button) { editingColors = true }
+//                                .padding(20.dp),
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            Column(Modifier.weight(1f)) {
+//                                Text(
+//                                    "Cores personalizadas",
+//                                    style = MaterialTheme.typography.titleMedium,
+//                                    fontWeight = FontWeight.SemiBold
+//                                )
+//                                Text(
+//                                    "Fundo, brilhos e acentos à tua escolha.",
+//                                    style = MaterialTheme.typography.bodySmall,
+//                                    color = c.textSecondary
+//                                )
+//                            }
+//                            Text("›", style = MaterialTheme.typography.titleLarge, color = c.accent)
+//                        }
+//
+//                        TextButton(onClick = onUseSystemColors) {
+//                            Text(
+//                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) "Usar cores do sistema"
+//                                else "Repor cores"
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
 
 /** Glass text field for the key, hidden by default, with a button to show it. */
 @Composable
@@ -740,10 +954,4 @@ private fun Label(text: String, swatch: Color? = null) {
         }
         Text(text, style = MaterialTheme.typography.labelLarge, color = c.accent)
     }
-}
-
-@Preview(heightDp = 1600)
-@Composable
-fun SettingsScreenPreview() {
-    SettingsScreen(onGetApiKey = {})
 }
