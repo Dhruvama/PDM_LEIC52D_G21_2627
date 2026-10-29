@@ -65,7 +65,7 @@ import isel.pdm.droidmentor.ui.components.SendButton
 import isel.pdm.droidmentor.ui.theme.AppColors
 import isel.pdm.droidmentor.ui.theme.BackgroundLimits
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
-import isel.pdm.droidmentor.ui.theme.GlowSpec
+import isel.pdm.droidmentor.ui.theme.ColorPair
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
 import isel.pdm.droidmentor.ui.theme.PresetThemes
 import isel.pdm.droidmentor.ui.theme.modifiers.glass
@@ -667,10 +667,10 @@ private fun ColorEditor(
                 onCheckedChange = { linked ->
                     if (isTop) {
                         onTopLinkedChange(linked)
-                        if (linked) onDraftChange(draft.copy(top = GlowSpec(draft.top.glow)))
+                        if (linked) onDraftChange(draft.copy(top = ColorPair(draft.top.glow)))
                     } else {
                         onBottomLinkedChange(linked)
-                        if (linked) onDraftChange(draft.copy(bottom = GlowSpec(draft.bottom.glow)))
+                        if (linked) onDraftChange(draft.copy(bottom = ColorPair(draft.bottom.glow)))
                     }
                     onFinished()
                 }

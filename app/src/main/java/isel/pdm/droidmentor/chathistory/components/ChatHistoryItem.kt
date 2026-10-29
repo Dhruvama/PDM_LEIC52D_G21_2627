@@ -20,7 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
-import isel.pdm.droidmentor.chathistory.ChatSummary
+import isel.pdm.droidmentor.domain.history.ChatSummary
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
@@ -131,14 +130,14 @@ private fun ChatInfo(title: String, chat: ChatSummary, modifier: Modifier = Modi
 
 /** E.g. "5 min ago" / "há 5 min", in the device's language. */
 @Composable
-private fun relativeTime(millis: Long): String = remember(millis) {
+private fun relativeTime(millis: Long): String =
     DateUtils.getRelativeTimeSpanString(
         millis,
         System.currentTimeMillis(),
         DateUtils.MINUTE_IN_MILLIS,
         DateUtils.FORMAT_ABBREV_RELATIVE,
     ).toString()
-}
+
 
 /** E.g. "4 messages". Zero has its own string: in Portuguese the "one" plural also covers 0. */
 @Composable

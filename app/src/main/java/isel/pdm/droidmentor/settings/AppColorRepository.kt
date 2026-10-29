@@ -10,7 +10,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import isel.pdm.droidmentor.ui.theme.AppColors
-import isel.pdm.droidmentor.ui.theme.GlowSpec
+import isel.pdm.droidmentor.ui.theme.ColorPair
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -48,8 +48,8 @@ class AppColorsRepository(private val dataStore: DataStore<Preferences>) {
                 null
             } else {
                 AppColors(
-                    top = GlowSpec(Color(topGlow), Color(topAccent)),
-                    bottom = GlowSpec(Color(bottomGlow), Color(bottomAccent)),
+                    top = ColorPair(Color(topGlow), Color(topAccent)),
+                    bottom = ColorPair(Color(bottomGlow), Color(bottomAccent)),
                     background = Color(background),
                 )
             }

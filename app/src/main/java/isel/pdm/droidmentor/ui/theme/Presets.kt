@@ -10,18 +10,15 @@ private data class PresetSpec(
     val lightBackground: Color,
 ) {
     fun toAppColors(light: Boolean) = AppColors(
-        top = GlowSpec(top),
-        bottom = GlowSpec(bottom),
+        top = ColorPair(top),
+        bottom = ColorPair(bottom),
         background = if (light) lightBackground else darkBackground,
     )
 }
 
 private val presetSpecs = listOf(
-    // Default (lime / green)
     PresetSpec(Color(0xFF00BCD4), Color(0xFF009688), Color(0xFF040504), Color(0xFFF5F7F2)),
-    // Violet / blue
     PresetSpec(Color(0xFF8B5CF6), Color(0xFF3B82F6), Color(0xFF05040A), Color(0xFFF6F5FB)),
-    // Orange / pink
     PresetSpec(Color(0xFFF97316), Color(0xFFEC4899), Color(0xFF0A0505), Color(0xFFFBF6F4)),
 )
 

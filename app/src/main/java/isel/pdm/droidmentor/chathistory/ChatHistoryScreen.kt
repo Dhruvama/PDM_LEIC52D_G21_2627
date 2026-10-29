@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,10 +33,12 @@ import isel.pdm.droidmentor.chathistory.components.ChatHistoryItem
 import isel.pdm.droidmentor.chathistory.components.ChatHistorySnackbarHost
 import isel.pdm.droidmentor.chathistory.components.ChatHistoryTopBar
 import isel.pdm.droidmentor.chathistory.components.ChatSearchField
+import isel.pdm.droidmentor.chathistory.components.DeleteChatConfirmation
 import isel.pdm.droidmentor.chathistory.components.EmptyHistory
 import isel.pdm.droidmentor.chathistory.components.NewChatButton
 import isel.pdm.droidmentor.chathistory.components.NoResults
 import isel.pdm.droidmentor.chathistory.components.UndoDeleteSnackbarEffect
+import isel.pdm.droidmentor.domain.history.ChatSummary
 import isel.pdm.droidmentor.ui.theme.AppColors
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
@@ -83,14 +86,15 @@ fun ChatHistoryScreen(
  * Draws the whole Chat History screen from [state]: top bar, search field and the list of
  * saved chats (or a loading indicator, the empty state or a "no results" message), plus the
  * "Chat deleted · Undo" snackbar while [deletedChat] isn't `null`.
- * Stateless: every user action is passed straight to a callback.
+ * Tapping "Delete" on a chat first asks for confirmation; [onDeleteChat] is only called once
+ * the user confirms. Apart from that dialog, every user action is passed straight to a callback.
  *
  * @param state What the screen shows.
  * @param deletedChat The chat just deleted, while it can still be undone; `null` otherwise.
  * @param onBackClick Called when the user taps the back button.
  * @param onSearchChange Called with the new text whenever the user types in the search field.
  * @param onChatClick Called with the chat the user tapped, to open it.
- * @param onDeleteChat Called with the chat whose "Delete" button was tapped.
+ * @param onDeleteChat Called with the chat the user confirmed they want to delete.
  * @param onUndoDelete Called when the user taps "Undo" in the snackbar.
  * @param onDeleteConfirmed Called when the snackbar goes away without "Undo" being tapped.
  * @param onNewChatClick Called when the user taps "New chat".
@@ -113,6 +117,18 @@ private fun ChatHistoryScreenContent(
         snackbarHostState = snackbarHostState,
         onUndo = onUndoDelete,
         onConfirmed = onDeleteConfirmed,
+    )
+
+    // Only the id is saved, so the dialog survives rotation without ChatSummary being Parcelable
+    var chatToDeleteId by rememberSaveable { mutableStateOf<Long?>(null) }
+    DeleteChatConfirmation(
+        chatId = chatToDeleteId,
+        chats = (state as? ChatHistoryScreenState.Loaded)?.visibleChats.orEmpty(),
+        onConfirm = { chat ->
+            chatToDeleteId = null
+            onDeleteChat(chat)
+        },
+        onDismiss = { chatToDeleteId = null },
     )
 
     Scaffold(
@@ -141,7 +157,6 @@ private fun ChatHistoryScreenContent(
             }
         },
         floatingActionButton = {
-            // The empty state already has its own button with animation
             if (state is ChatHistoryScreenState.Loaded) {
                 NewChatButton(onClick = onNewChatClick)
             }
@@ -172,7 +187,7 @@ private fun ChatHistoryScreenContent(
                     ChatList(
                         chats = state.visibleChats,
                         onChatClick = onChatClick,
-                        onDeleteChat = onDeleteChat,
+                        onDeleteChat = { chatToDeleteId = it.id },
                         contentPadding = innerPadding,
                         modifier = Modifier.fillMaxSize(),
                     )

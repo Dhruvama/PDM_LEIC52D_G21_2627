@@ -32,7 +32,7 @@ import isel.pdm.droidmentor.ui.theme.AppColors
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
-import isel.pdm.droidmentor.ui.theme.GlowSpec
+import isel.pdm.droidmentor.ui.theme.ColorPair
 import isel.pdm.droidmentor.ui.theme.LocalAppColors
 import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
 
@@ -292,13 +292,13 @@ private fun StatusBannersPreviewContent() {
 private const val previewErrorMessage = "Too many requests (429). Try again in a moment."
 
 private val previewRedTheme = AppColors(
-    top = GlowSpec(Color(0xFFE53935)),
-    bottom = GlowSpec(Color(0xFFFF7043)),
+    top = ColorPair(Color(0xFFE53935)),
+    bottom = ColorPair(Color(0xFFFF7043)),
     background = Color(0xFF0B0606),
 )
 
 private val previewYellowTheme = AppColors(
-    top = GlowSpec(Color(0xFFFFC107)),
-    bottom = GlowSpec(Color(0xFFFFEB3B)),
+    top = ColorPair(Color(0xFFFFC107)),
+    bottom = ColorPair(Color(0xFFFFEB3B)),
     background = Color(0xFFFAF8EF),
 )
