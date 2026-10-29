@@ -14,6 +14,7 @@ import isel.pdm.droidmentor.buildLogTag
 import isel.pdm.droidmentor.chathistory.ChatHistoryActivity
 import isel.pdm.droidmentor.settings.SettingsActivity
 import isel.pdm.droidmentor.UserTheme
+import isel.pdm.droidmentor.titlescreen.TitleActivity
 
 /**
  * Hosts the Active Chat screen. Opens and closes with a fade, so the transition
@@ -56,7 +57,7 @@ class ActiveChatActivity : ComponentActivity() {
                 ActiveChatScreen(
                     viewModel = viewModel,
                     assembleLogo = assembleLogo,
-                    onBack = { finish() },
+                    onTitle = { TitleActivity.navigateFrom(this@ActiveChatActivity) },
                     onHistory = { ChatHistoryActivity.navigateFrom(this@ActiveChatActivity) },
                     onSettings = { SettingsActivity.navigateFrom(this@ActiveChatActivity) }
                 )
