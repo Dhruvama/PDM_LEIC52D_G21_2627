@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="title_activity_about">Sobre</string>
+    <string name="title_activity_settings">Definições</string>
+
     <!-- Active Chat: message bubbles -->
     <string name="user_message_edit_description">Editar mensagem</string>
     <string name="user_message_attached_image">Imagem anexada</string>
@@ -19,6 +22,13 @@
     <string name="offline_banner_message">Estás offline. Podes ler esta conversa, mas as novas perguntas ficam em pausa até voltares a ligar-te.</string>
     <string name="error_banner_retry">Tentar novamente</string>
     <string name="error_banner_dismiss">Dispensar</string>
+
+    <!-- Active Chat: failure messages -->
+    <string name="failure_rate_limited">Demasiados pedidos. Espera um momento e tenta novamente.</string>
+    <string name="failure_server_error">O servidor do mentor teve um problema. Tenta novamente.</string>
+    <string name="failure_invalid_key">A tua chave da API do Gemini foi rejeitada. Verifica-a nas Definições.</string>
+    <string name="failure_no_connection">Não foi possível contactar o mentor. Verifica a tua ligação.</string>
+    <string name="failure_unknown">Algo correu mal. Tenta novamente.</string>
 
     <!-- Active Chat: message list -->
     <string name="welcome_good_morning">Bom dia!</string>
@@ -108,4 +118,9 @@
         <item quantity="many">%1$d mensagens</item>
         <item quantity="other">%1$d mensagens</item>
     </plurals>
+
+    <!-- Settings -->
+    <string name="settings_level_beginner">Iniciante</string>
+    <string name="settings_level_intermediate">Intermédio</string>
+    <string name="settings_level_senior">Sénior</string>
 </resources>

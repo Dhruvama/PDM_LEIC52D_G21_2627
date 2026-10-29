@@ -30,10 +30,12 @@ private const val FRONT_DEPTH_THRESHOLD = 0.92f
 
 /**
  * Draws the shadow and every dot [elapsed] seconds after the mascot appeared,
- * with the dots [scatter] of the way from the droid (0) to the swirl (1).
+ * with the dots [scatter] of the way from the droid (0) to the swirl (1). The swirl turns
+ * with [swirlTime].
  */
 internal fun DrawScope.drawDroid(
     elapsed: Float,
+    swirlTime: Float,
     scatter: Float,
     seeds: DroidSeeds,
     from: FloatArray,
@@ -61,7 +63,7 @@ internal fun DrawScope.drawDroid(
 
     for (i in 0 until PARTICLE_COUNT) {
         droidPoint(i, elapsed, eyeOpen, seeds, from)
-        swirlPoint(i, elapsed, seeds, to)
+        swirlPoint(i, swirlTime, seeds, to)
 
         // Later dots start later, so the change "flows" from the center of the head outwards
         val stagger = (scatter * 1.4f - (i.toFloat() / PARTICLE_COUNT) * 0.4f).coerceIn(0f, 1f)
@@ -83,7 +85,8 @@ internal fun DrawScope.drawDroid(
             x = straightX * twistCos - y * twistSin
             y = straightX * twistSin + y * twistCos
         }
-        y += floatOffset
+        // Only the droid floats: the swirl stays centered, where the chat's logo gathers from it
+        y += floatOffset * droidAmount
 
         val sprite = if (depth > FRONT_DEPTH_THRESHOLD) {
             sprites.highlight
@@ -93,7 +96,7 @@ internal fun DrawScope.drawDroid(
             sprites.gradient[(g * (GRADIENT_STEPS - 1)).roundToInt()]
         }
         val spriteSize = ((SPRITE_BASE_DP + depth * SPRITE_DEPTH_DP) * SPRITE_SCALE *
-            (0.6f + 0.4f * visibility)).dp.toPx()
+                (0.6f + 0.4f * visibility)).dp.toPx()
         val alpha = ((0.2f + depth * 0.65f) * visibility).coerceAtMost(1f)
         val spriteScale = spriteSize / GLOW_SPRITE_PX
 

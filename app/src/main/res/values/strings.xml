@@ -104,6 +104,13 @@
     <string name="color_picker_saturation">Saturation</string>
     <string name="color_picker_brightness">Brightness</string>
 
+    <!-- Settings -->
+    <string name="settings_level_beginner">Beginner</string>
+    <string name="settings_level_intermediate">Intermediate</string>
+    <string name="settings_level_senior">Senior</string>
+    <string name="settings_model_flash" translatable="false">Gemini Flash</string>
+    <string name="settings_model_pro" translatable="false">Gemini Pro</string>
+
     <!-- Chat History -->
     <string name="chat_history_title">History</string>
     <string name="chat_history_new_chat">New chat</string>

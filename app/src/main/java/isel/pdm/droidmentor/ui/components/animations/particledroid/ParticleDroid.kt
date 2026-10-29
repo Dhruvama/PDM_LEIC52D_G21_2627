@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import isel.pdm.droidmentor.R
+import isel.pdm.droidmentor.ui.components.animations.particlelogo.swirlClockSeconds
 import isel.pdm.droidmentor.ui.theme.DefaultDarkColors
 import isel.pdm.droidmentor.ui.theme.DefaultLightColors
 import isel.pdm.droidmentor.ui.theme.DroidMentorTheme
@@ -57,13 +58,19 @@ private val MORPH_SPEC = spring<Float>(dampingRatio = Spring.DampingRatioNoBounc
 private const val STILL_TIME_SECONDS = 2f
 
 /**
- * The About screen's mascot made of glowing dots, in the style of the particle logo:
- * the Android head (with antennae that sway and eyes that blink) floats, then scatters
+ * The mascot made of glowing dots (About and Title screens), in the style of the particle
+ * logo: the Android head (with antennae that sway and eyes that blink) floats, then scatters
  * into a swirl and gathers back into the head. When the screen opens,
  * the dots gather into the head.
  *
  * Tapping it scatters the head into the swirl, calls [onClick] while it is scattered and
- * then gathers it back.
+ * then gathers it back. Without [onClick] it is purely decorative: not clickable and with
+ * no content description.
+ *
+ * While [gathered] is false the loop stops and the dots stay in the swirl (used for the
+ * Title screen's transition to the chat). The swirl turns with the same clock as the chat
+ * logo's entry swirl, so both line up while the screens cross-fade. When [gathered] becomes
+ * true again, the head re-forms and the loop restarts.
  *
  * Only the draw phase repeats every frame; nothing recomposes while animating. If the user
  * turned animations off in the system settings, the head is drawn without motion.
@@ -75,15 +82,19 @@ private const val STILL_TIME_SECONDS = 2f
  * - `ParticleDroidSprites.kt`: the glow bitmaps the dots are drawn with.
  *
  * @param onClick Called once per tap, when the head has scattered (rapid taps count as one).
+ * `null` = no touch.
+ * @param gathered true = the droid and its loop; false = dots held in the swirl.
  * @param size Width and height of the drawing area.
  * @param staticTimeSeconds When not `null`, nothing animates and the mascot is drawn at this
  * instant (useful for previews).
- * @param staticScatter What is drawn when nothing animates: 0 = droid, 1 = swirl.
+ * @param staticScatter What is drawn when nothing animates and [gathered] is true:
+ * 0 = droid, 1 = swirl.
  */
 @Composable
 fun ParticleDroid(
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    gathered: Boolean = true,
     size: Dp = 250.dp,
     staticTimeSeconds: Float? = null,
     staticScatter: Float = GATHERED,
@@ -101,27 +112,38 @@ fun ParticleDroid(
     // Starts scattered, so the dots gather into the head when the screen opens
     val scatter = remember { Animatable(SCATTERED) }
     var taps by remember { mutableIntStateOf(0) }
+    // Taps already answered, so re-gathering after a transition does not repeat a click
+    var handledTaps by remember { mutableIntStateOf(0) }
     val currentOnClick by rememberUpdatedState(onClick)
 
     var timeSeconds by remember { mutableFloatStateOf(0f) }
+    var swirlTimeSeconds by remember { mutableFloatStateOf(0f) }
     if (frozenTime == null) {
         LaunchedEffect(Unit) {
             val startNanos = withFrameNanos { it }
             while (true) {
-                withFrameNanos { timeSeconds = (it - startNanos) / 1_000_000_000f }
+                withFrameNanos {
+                    timeSeconds = (it - startNanos) / 1_000_000_000f
+                    swirlTimeSeconds = swirlClockSeconds(it)
+                }
             }
         }
-        // Each tap restarts this from wherever the dots are at that moment
-        LaunchedEffect(taps) {
-            if (taps > 0) {
+        // Each tap, and each change of gathered, restarts this from wherever the dots are
+        LaunchedEffect(taps, gathered) {
+            if (!gathered) {
+                scatter.animateTo(SCATTERED, MORPH_SPEC)
+                return@LaunchedEffect
+            }
+            if (taps > handledTaps) {
+                handledTaps = taps
                 var clicked = false
                 scatter.animateTo(SCATTERED, MORPH_SPEC) {
                     if (!clicked && value >= 0.5f) {
                         clicked = true
-                        currentOnClick()
+                        currentOnClick?.invoke()
                     }
                 }
-                if (!clicked) currentOnClick()
+                if (!clicked) currentOnClick?.invoke()
                 delay(TAP_SWIRL_HOLD_MILLIS)
             }
             while (true) {
@@ -139,23 +161,30 @@ fun ParticleDroid(
     val additive = !c.isLight
 
     val description = stringResource(R.string.about_mascot_description)
+    val touch = if (onClick == null) Modifier else Modifier
+        .semantics { contentDescription = description }
+        .clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            role = Role.Button
+        ) {
+            if (frozenTime != null) onClick() else if (gathered) taps++
+        }
 
     Canvas(
         modifier
             .size(size)
-            .semantics { contentDescription = description }
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                role = Role.Button
-            ) {
-                if (frozenTime == null) taps++ else onClick()
-            }
+            .then(touch)
     ) {
         // timeSeconds and scatter are read ONLY here, so each frame only repeats the draw phase.
         drawDroid(
             elapsed = frozenTime ?: timeSeconds,
-            scatter = if (frozenTime == null) scatter.value else staticScatter,
+            swirlTime = frozenTime ?: swirlTimeSeconds,
+            scatter = when {
+                frozenTime == null -> scatter.value
+                gathered -> staticScatter
+                else -> SCATTERED
+            },
             seeds = seeds,
             from = from,
             to = to,
@@ -205,6 +234,17 @@ private fun ParticleDroidAnimatedPreview() {
     DroidMentorTheme(colors = PresetThemes[2]) {
         Box(Modifier.background(LocalAppColors.current.background)) {
             ParticleDroid(onClick = {})
+        }
+    }
+}
+
+// As on the Title screen: no touch, held in the swirl while moving to the chat.
+@Preview
+@Composable
+private fun ParticleDroidNoTouchScatteredPreview() {
+    DroidMentorTheme(colors = DefaultDarkColors) {
+        Box(Modifier.background(LocalAppColors.current.background)) {
+            ParticleDroid(onClick = null, gathered = false, staticTimeSeconds = 10.6f)
         }
     }
 }

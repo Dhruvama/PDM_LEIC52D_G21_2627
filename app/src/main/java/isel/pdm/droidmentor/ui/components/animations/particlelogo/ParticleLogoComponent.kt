@@ -30,8 +30,7 @@ import isel.pdm.droidmentor.ui.theme.readableOn
 
 const val PARTICLE_LOGO_TAG = "particle_logo"
 
-// The Title screen's mascot is drawn in a 300×330 dp box, so its swirl has a radius of
-// min(300, 330) / 2 = 150 dp. The entry swirl has that same size on screen.
+// The Title screen's mascot is drawn in a 300 dp box, so its swirl has a radius of 150 dp. The entry swirl has that same size on screen.
 private const val TITLE_SWIRL_RADIUS_DP = 150f
 
 /** Time drawn when the user turned animations off: the middle of the sphere's hold. */
@@ -178,11 +177,11 @@ private fun rememberGlowSprites(logoColors: ParticleLogoColors?): GlowSprites {
 }
 
 /**
- * Clock of the entry swirl, from a frame time of `withFrameNanos`. The Title screen turns its
- * swirl with this same clock, so both swirls line up while the screens cross-fade. It wraps
- * around after 1000 s so the float value stays precise.
+ * Clock of the entry swirl, from a frame time of `withFrameNanos`. The Title screen's mascot
+ * (ParticleDroid) turns its swirl with this same clock, so both swirls line up while the
+ * screens cross-fade. It wraps around after 1000 s so the float value stays precise.
  */
-private fun swirlClockSeconds(frameNanos: Long): Float =
+internal fun swirlClockSeconds(frameNanos: Long): Float =
     ((frameNanos / 1_000_000L) % 1_000_000L) / 1000f
 
 //==================================== TESTS/PREVIEWS ====================================//

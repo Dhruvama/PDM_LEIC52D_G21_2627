@@ -64,6 +64,7 @@ import isel.pdm.droidmentor.ui.theme.modifiers.frostedGlass
 import isel.pdm.droidmentor.ui.theme.modifiers.glass
 import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
 import isel.pdm.droidmentor.R
+import isel.pdm.droidmentor.ui.components.animations.particledroid.ParticleDroid
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Settings
@@ -90,6 +91,12 @@ private val CHAT_TOP_BAR_HEIGHT = 60.dp
 
 /** Size of the chat's logo in portrait. */
 private val CHAT_LOGO_SIZE = 240.dp
+
+/**
+ * Size of the droid in portrait. Its swirl's radius (half of it) must match the chat logo's
+ * entry swirl (TITLE_SWIRL_RADIUS_DP in ParticleLogoComponent.kt).
+ */
+private val TITLE_DROID_SIZE = 300.dp
 
 /** Lines of the chat composer's empty text field. */
 private const val CHAT_COMPOSER_LINES = 2
@@ -243,7 +250,12 @@ private fun ChatAlignedBust(gathered: Boolean) {
     ) {
         // The bust is bigger than the chat's logo: it overflows this box, around its center.
         Box(Modifier.size(CHAT_LOGO_SIZE), contentAlignment = Alignment.Center) {
-            ParticleBust(gathered, Modifier.requiredSize(300.dp, 330.dp))
+            ParticleDroid(
+                onClick = null,
+                gathered = gathered,
+                modifier = Modifier.requiredSize(TITLE_DROID_SIZE),
+                size = TITLE_DROID_SIZE,
+            )
         }
         Box(contentAlignment = Alignment.TopCenter) {
             ChatWelcomeSpace()
@@ -331,7 +343,7 @@ private fun TitleLandscape(
                     .fillMaxHeight(),
                 contentAlignment = Alignment.Center,
             ) {
-                ParticleBust(gathered, Modifier.size(240.dp, 264.dp))
+                ParticleDroid(onClick = null, gathered = gathered, size = 240.dp)
             }
 
             Column(
