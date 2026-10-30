@@ -123,4 +123,51 @@
     <string name="settings_level_beginner">Iniciante</string>
     <string name="settings_level_intermediate">Intermédio</string>
     <string name="settings_level_senior">Sénior</string>
+
+    <!-- Settings: Custom Colors -->
+    <string name="settings_custom_colors_title">Cores personalizadas</string>
+    <string name="settings_custom_colors_desc">Fundo, brilhos e acentos à tua escolha.</string>
+    <string name="settings_custom_colors_done">Concluído</string>
+    <string name="settings_use_system_colors">Usar cores do sistema</string>
+    <string name="settings_reset_colors">Repor cores</string>
+
+    <!-- Settings: Color Editor Targets -->
+    <string name="settings_color_background">Fundo</string>
+    <string name="settings_color_top_glow">Brilho de cima</string>
+    <string name="settings_color_top_accent">Acento de cima</string>
+    <string name="settings_color_bottom_glow">Brilho de baixo</string>
+    <string name="settings_color_bottom_accent">Acento de baixo</string>
+    <string name="settings_accent_linked">Acento igual ao brilho</string>
+    <string name="settings_accent_linked_desc">Desliga para escolher outra cor para botões e texto em destaque.</string>
+
+    <!-- Settings: Mentor Component -->
+    <string name="settings_mentor_title">Mentor</string>
+    <string name="settings_mentor_level">Nível das respostas</string>
+    <string name="settings_mentor_code_examples">Incluir exemplos de código</string>
+    <string name="settings_mentor_code_examples_desc">Kotlin e Compose sempre que fizer sentido.</string>
+    <string name="settings_mentor_short_answers">Respostas curtas</string>
+    <string name="settings_mentor_short_answers_desc">Vai direto ao assunto, sem rodeios.</string>
+
+    <!-- Settings: Appearance Component -->
+    <string name="settings_appearance_title">Aparência</string>
+    <string name="settings_appearance_presets">Temas prontos</string>
+    <string name="settings_appearance_mode">Modo</string>
+    <string name="settings_appearance_dark">Escuro</string>
+    <string name="settings_appearance_light">Claro</string>
+
+    <!-- Settings: Theme Preview -->
+    <string name="settings_preview_user_message">Porque é que o meu estado desaparece ao rodar o ecrã?</string>
+    <string name="settings_preview_mentor_message">Usa rememberSaveable em vez de remember.</string>
+    <string name="settings_preview_input_hint">Escreve uma mensagem…</string>
+
+    <!-- Settings: Gemini Config Component -->
+    <string name="settings_gemini_title">Gemini</string>
+    <string name="settings_gemini_key_note">A chave fica só neste dispositivo e é enviada apenas ao Gemini.</string>
+    <string name="settings_gemini_get_key">Obter uma chave ↗</string>
+    <string name="settings_gemini_model">Modelo</string>
+
+    <!-- Settings: API Key Field -->
+    <string name="settings_gemini_key_hint">Cola aqui a tua API key</string>
+    <string name="settings_key_show">Mostrar</string>
+    <string name="settings_key_hide">Ocultar</string>
 </resources>

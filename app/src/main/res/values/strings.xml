@@ -128,4 +128,51 @@
         <item quantity="one">1 message</item>
         <item quantity="other">%1$d messages</item>
     </plurals>
+
+    <!-- Settings: Custom Colors -->
+    <string name="settings_custom_colors_title">Custom colors</string>
+    <string name="settings_custom_colors_desc">Background, glows and accents of your choice.</string>
+    <string name="settings_custom_colors_done">Done</string>
+    <string name="settings_use_system_colors">Use system colors</string>
+    <string name="settings_reset_colors">Reset colors</string>
+
+    <!-- Settings: Color Editor Targets -->
+    <string name="settings_color_background">Background</string>
+    <string name="settings_color_top_glow">Top glow</string>
+    <string name="settings_color_top_accent">Top accent</string>
+    <string name="settings_color_bottom_glow">Bottom glow</string>
+    <string name="settings_color_bottom_accent">Bottom accent</string>
+    <string name="settings_accent_linked">Accent matches glow</string>
+    <string name="settings_accent_linked_desc">Turn off to pick a different color for buttons and highlighted text.</string>
+
+    <!-- Settings: Mentor Component -->
+    <string name="settings_mentor_title">Mentor</string>
+    <string name="settings_mentor_level">Answer level</string>
+    <string name="settings_mentor_code_examples">Include code examples</string>
+    <string name="settings_mentor_code_examples_desc">Kotlin and Compose whenever it makes sense.</string>
+    <string name="settings_mentor_short_answers">Short answers</string>
+    <string name="settings_mentor_short_answers_desc">Gets straight to the point, no fluff.</string>
+
+    <!-- Settings: Appearance Component -->
+    <string name="settings_appearance_title">Appearance</string>
+    <string name="settings_appearance_presets">Ready-made themes</string>
+    <string name="settings_appearance_mode">Mode</string>
+    <string name="settings_appearance_dark">Dark</string>
+    <string name="settings_appearance_light">Light</string>
+
+    <!-- Settings: Theme Preview -->
+    <string name="settings_preview_user_message">Why does my state disappear when I rotate the screen?</string>
+    <string name="settings_preview_mentor_message">Use rememberSaveable instead of remember.</string>
+    <string name="settings_preview_input_hint">Type a message…</string>
+
+    <!-- Settings: Gemini Config Component -->
+    <string name="settings_gemini_title">Gemini</string>
+    <string name="settings_gemini_key_note">The key stays only on this device and is sent only to Gemini.</string>
+    <string name="settings_gemini_get_key">Get a key ↗</string>
+    <string name="settings_gemini_model">Model</string>
+
+    <!-- Settings: API Key Field -->
+    <string name="settings_gemini_key_hint">Paste your API key here</string>
+    <string name="settings_key_show">Show</string>
+    <string name="settings_key_hide">Hide</string>
 </resources>

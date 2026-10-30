@@ -1,5 +1,6 @@
 package isel.pdm.droidmentor.settings
 
+import isel.pdm.droidmentor.domain.settings.MentorSettings
 import isel.pdm.droidmentor.ui.theme.AppColors
 
 /**
@@ -27,5 +28,6 @@ interface SettingsActions {
     fun onPresetSelect(preset: AppColors)
     fun onUseSystemColors()
     fun onGetApiKey()
+    fun onMentorSettingsChange(settings: MentorSettings)
     fun onBack()
 }

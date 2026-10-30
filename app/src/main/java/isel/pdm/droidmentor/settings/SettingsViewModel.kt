@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import isel.pdm.droidmentor.DroidMentorApplication
 import isel.pdm.droidmentor.buildLogTag
+import isel.pdm.droidmentor.domain.settings.MentorSettings
 import isel.pdm.droidmentor.ui.theme.AppColors
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -27,6 +28,7 @@ data class SettingsScreenState(
     val topLinked: Boolean = true,
     val bottomLinked: Boolean = true,
     val loaded: Boolean = false,
+    val mentor: MentorSettings = MentorSettings(),
 )
 
 /** ViewModel of the Settings screen. Reads and saves the colors in [repository]. */
@@ -86,6 +88,10 @@ class SettingsViewModel(private val repository: AppColorsRepository) : ViewModel
     fun useSystemColors() {
         state = state.copy(colors = null, topLinked = true, bottomLinked = true)
         viewModelScope.launch { repository.save(null) }
+    }
+
+    fun updateMentorSettings(newSettings: MentorSettings) {
+        state = state.copy(mentor = newSettings)
     }
 
     companion object {
