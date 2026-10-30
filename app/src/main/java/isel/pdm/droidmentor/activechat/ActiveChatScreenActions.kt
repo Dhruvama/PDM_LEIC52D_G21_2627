@@ -26,7 +26,7 @@ import isel.pdm.droidmentor.domain.chat.ChatMessage
  * - [onDismissError]: the user dismissed the error banner.
  */
 interface ActiveChatActions {
-    fun onBack()
+    fun onTitle()
     fun onHistory()
     fun onSettings()
     fun onInputChange(text: String)

@@ -7,9 +7,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import isel.pdm.droidmentor.UserTheme
 import isel.pdm.droidmentor.activechat.ActiveChatActivity
 import isel.pdm.droidmentor.buildLogTag
-import isel.pdm.droidmentor.UserTheme
 
 class ChatHistoryActivity : ComponentActivity() {
 

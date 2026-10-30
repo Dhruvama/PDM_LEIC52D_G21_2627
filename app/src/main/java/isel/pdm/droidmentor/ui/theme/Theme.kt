@@ -58,9 +58,6 @@ fun DroidMentorTheme(
     val appColors = colors ?: systemAppColors(darkTheme, dynamicColor)
     val scheme = remember(appColors) { appColors.toColorScheme() }
 
-    // Match the status bar and navigation bar icons to the background (light or dark).
-    // TODO set edge to edge and verify
-
     CompositionLocalProvider(LocalAppColors provides appColors) {
         MaterialTheme(
             colorScheme = scheme,
@@ -75,8 +72,8 @@ fun DroidMentorTheme(
  * The scheme's primary becomes the top glow, so it is also the default accent.
  */
 fun ColorScheme.toAppColors() = AppColors(
-    top = GlowSpec(primary.vivid()),
-    bottom = GlowSpec(tertiary.vivid()),
+    top = ColorPair(primary.vivid()),
+    bottom = ColorPair(tertiary.vivid()),
     background = surfaceContainerLowest,
 )
 

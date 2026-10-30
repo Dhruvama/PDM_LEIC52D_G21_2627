@@ -112,6 +112,10 @@
     <string name="chat_history_chat_deleted">Conversa apagada</string>
     <string name="chat_history_undo">Desfazer</string>
     <string name="chat_history_delete">Apagar conversa %1$s</string>
+    <string name="chat_history_delete_dialog_title">Apagar conversa?</string>
+    <string name="chat_history_delete_dialog_body">Tens a certeza de que queres apagar \"%1$s\"?</string>
+    <string name="chat_history_delete_dialog_confirm">Apagar</string>
+    <string name="chat_history_delete_dialog_cancel">Cancelar</string>
     <string name="chat_history_message_count_zero">0 mensagens</string>
     <plurals name="chat_history_message_count">
         <item quantity="one">%1$d mensagem</item>
