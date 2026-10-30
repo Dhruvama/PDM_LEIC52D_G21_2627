@@ -64,7 +64,7 @@ private val logTag = buildLogTag("ActiveChatScreen")
 fun ActiveChatScreen(
     viewModel: ActiveChatScreenViewModel,
     assembleLogo: Boolean,
-    onBack: () -> Unit,
+    onTitle: () -> Unit,
     onHistory: () -> Unit,
     onSettings: () -> Unit
 ) {
@@ -73,10 +73,10 @@ fun ActiveChatScreen(
     val scope = rememberCoroutineScope()
 
     // Created once and reused across recompositions; the keys recreate it only if one of them changes.
-    val actions = remember(viewModel, onBack, onHistory, onSettings, clipboard, scope) {
+    val actions = remember(viewModel, onTitle, onHistory, onSettings, clipboard, scope) {
         object : ActiveChatActions {
             // `.invoke()` makes it explicit that these call the screen's parameters, not this object's own functions.
-            override fun onBack() = onBack.invoke()
+            override fun onTitle() = onTitle.invoke()
 
             override fun onHistory() = onHistory.invoke()
 
@@ -175,7 +175,7 @@ private fun ActiveChatScreenContent(
         Column(modifier = Modifier.fillMaxSize()) {
             ChatTopBarComponent(
                 title = state.chatTitle ?: stringResource(R.string.new_chat),
-                onBackClick = actions::onBack,
+                onBackClick = actions::onTitle,
                 onHistoryClick = actions::onHistory,
                 onSettingsClick = actions::onSettings,
             )
@@ -237,7 +237,7 @@ private fun failureText(reason: FailureReason): String =
 
 /** Actions that do nothing, for previews. */
 private object PreviewActions : ActiveChatActions {
-    override fun onBack() {}
+    override fun onTitle() {}
     override fun onHistory() {}
     override fun onSettings() {}
     override fun onInputChange(text: String) {}

@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">DroidMentor</string>
 
-    <string name="title_activity_about">AboutActivity</string>
-    <string name="title_activity_settings">Definições</string>
+    <string name="title_activity_about">About</string>
+    <string name="title_activity_settings">Settings</string>
 
     <!-- Active Chat: message bubbles -->
     <string name="user_message_edit_description">Edit message</string>
@@ -123,6 +123,10 @@
     <string name="chat_history_chat_deleted">Chat deleted</string>
     <string name="chat_history_undo">Undo</string>
     <string name="chat_history_delete">Delete chat %1$s</string>
+    <string name="chat_history_delete_dialog_title">Delete chat?</string>
+    <string name="chat_history_delete_dialog_body">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="chat_history_delete_dialog_confirm">Delete</string>
+    <string name="chat_history_delete_dialog_cancel">Cancel</string>
     <string name="chat_history_message_count_zero">0 messages</string>
     <plurals name="chat_history_message_count">
         <item quantity="one">1 message</item>

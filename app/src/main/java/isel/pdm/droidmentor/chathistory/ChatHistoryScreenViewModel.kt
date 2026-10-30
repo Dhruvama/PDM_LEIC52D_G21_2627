@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import isel.pdm.droidmentor.domain.history.ChatSummary
+import isel.pdm.droidmentor.domain.history.matches
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,15 +34,8 @@ sealed class ChatHistoryScreenState {
         val searchQuery: String = "",
     ) : ChatHistoryScreenState() {
 
-        /** The chats whose title or last message contains [searchQuery] (all of them if it is blank). */
-        // TODO pesquisar em todas as mensagens, não só na última?? quando as conversas forem guardadas
-        val visibleChats: List<ChatSummary> = searchQuery.trim().let { query ->
-            if (query.isEmpty()) chats
-            else chats.filter {
-                (it.title ?: "").contains(query, ignoreCase = true) ||
-                        it.lastMessage.contains(query, ignoreCase = true)
-            }
-        }
+        /** The chats that match [searchQuery] (all of them if it is blank). */
+        val visibleChats: List<ChatSummary> = chats.filter { it.matches(searchQuery) }
     }
 }
 

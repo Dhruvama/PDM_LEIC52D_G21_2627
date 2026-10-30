@@ -4,18 +4,15 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.luminance
-import kotlin.math.max
-import kotlin.math.min
 
 /**
- * Represents the color specifications for the gradient glow effect.
+ * Two independent colors for one side (top or bottom) of the theme.
  *
  * @property glow The color of the glow drawn in the background.
- * @property rawAccent The accent tied to this glow, before it is adjusted for contrast.
- * Same as [glow] unless the user unlinks them in the settings.
+ * @property rawAccent The accent used by UI elements, before it is adjusted for contrast.
+ * Starts equal to [glow] and follows it while linked in the settings.
  */
-data class GlowSpec(
+data class ColorPair(
     val glow: Color,
     val rawAccent: Color = glow
 )
@@ -23,13 +20,13 @@ data class GlowSpec(
 /**
  * Represents the color scheme for the application.
  *
- * @property top The top glow specification.
- * @property bottom The bottom glow specification.
+ * @property top The top glow and accent colors.
+ * @property bottom The bottom glow and accent colors.
  * @property background The background color.
  */
 data class AppColors(
-    val top: GlowSpec,
-    val bottom: GlowSpec,
+    val top: ColorPair,
+    val bottom: ColorPair,
     val background: Color,
 ) {
     val isLight = background.isLightColor()

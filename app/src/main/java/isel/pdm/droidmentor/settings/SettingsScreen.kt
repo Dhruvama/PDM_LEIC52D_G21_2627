@@ -46,7 +46,6 @@ import isel.pdm.droidmentor.ui.theme.LocalAppColors
 import isel.pdm.droidmentor.ui.theme.modifiers.glowBackground
 import isel.pdm.droidmentor.ui.theme.systemAppColors
 
-// 1. A NOVA FUNÇÃO PÚBLICA QUE FAZ A PONTE COM O VIEWMODEL (Faltava isto)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
