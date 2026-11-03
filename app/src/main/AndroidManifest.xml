@@ -24,7 +24,7 @@
 
         <!-- Ecrã Inicial (TitleActivity) -->
         <activity
-            android:name=".titlescreen.TitleActivity"
+            android:name=".screens.titlescreen.TitleActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.DroidMentor"
@@ -37,7 +37,7 @@
 
         <!-- Ecrã Sobre (AboutActivity) -->
         <activity
-            android:name=".about.AboutActivity"
+            android:name=".screens.about.AboutActivity"
             android:exported="true"
             android:label="@string/title_about_description"
             android:theme="@style/Theme.DroidMentor"
@@ -45,21 +45,21 @@
 
         <!-- Ecrã de Chat (ActiveChatActivity) -->
         <activity
-            android:name=".activechat.ActiveChatActivity"
+            android:name=".screens.activechat.ActiveChatActivity"
             android:exported="false"
             android:theme="@style/Theme.DroidMentor"
             android:windowSoftInputMode="adjustResize" />
 
         <!-- Ecrã de Settings (SettingsActivity) -->
         <activity
-            android:name=".settings.SettingsActivity"
+            android:name=".screens.settings.SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.DroidMentor"
             android:windowSoftInputMode="adjustResize" />
 
         <!-- Ecrã de Histórico (ChatHistoryActivity) -->
         <activity
-            android:name=".chathistory.ChatHistoryActivity"
+            android:name=".screens.chathistory.ChatHistoryActivity"
             android:exported="false"
             android:theme="@style/Theme.DroidMentor" />
 
