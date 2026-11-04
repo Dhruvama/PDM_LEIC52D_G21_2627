@@ -6,14 +6,13 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import isel.pdm.droidmentor.UserTheme
 import isel.pdm.droidmentor.screens.about.AboutActivity
 import isel.pdm.droidmentor.screens.activechat.ActiveChatActivity
 import isel.pdm.droidmentor.screens.chathistory.ChatHistoryActivity
 import isel.pdm.droidmentor.screens.settings.SettingsActivity
-import isel.pdm.droidmentor.UserTheme
 
-// No shared Logging.kt was visible to me, so the tag is defined locally.
-private val logTag = "DroidMentor.TitleActivity"
+private const val LOG_TAG = "DroidMentor.TitleActivity"
 
 /**
  * Hosts [TitleScreen]. It has no ViewModel: the screen has no data, only a visual transition.
@@ -32,7 +31,7 @@ class TitleActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.v(logTag, "onCreate")
+        Log.v(LOG_TAG, "onCreate")
         enableEdgeToEdge()
         setContent {
             UserTheme {
@@ -40,19 +39,12 @@ class TitleActivity : ComponentActivity() {
                     onStartChat = {
                         ActiveChatActivity.navigateFrom(
                             origin = this@TitleActivity,
-                            assembleLogo = true // Inicia a animação das partículas
+                            assembleLogo = true, // starts the particle animation in the chat
                         )
                     },
-                    onHistory = {
-                        ChatHistoryActivity.navigateFrom(this@TitleActivity)
-                    },
-                    onSettings = {
-                        SettingsActivity.navigateFrom(this@TitleActivity)
-                    },
-                    onAbout = {
-                        Log.i(logTag, "About pressed (About screen not built yet)")
-                        AboutActivity.navigateFrom(this@TitleActivity)
-                    },
+                    onHistory = { ChatHistoryActivity.navigateFrom(this@TitleActivity) },
+                    onSettings = { SettingsActivity.navigateFrom(this@TitleActivity) },
+                    onAbout = { AboutActivity.navigateFrom(this@TitleActivity) },
                 )
             }
         }
@@ -60,16 +52,16 @@ class TitleActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        Log.v(logTag, "onStart")
+        Log.v(LOG_TAG, "onStart")
     }
 
     override fun onStop() {
         super.onStop()
-        Log.v(logTag, "onStop")
+        Log.v(LOG_TAG, "onStop")
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.v(logTag, "onDestroy")
+        Log.v(LOG_TAG, "onDestroy")
     }
 }
