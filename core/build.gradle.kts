@@ -18,6 +18,7 @@ tasks.withType<KotlinCompile>().configureEach {
 }
 
 dependencies {
+    implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
 }

@@ -5,11 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import isel.pdm.droidmentor.DependenciesContainer
 import isel.pdm.droidmentor.domain.history.ChatSummary
+import isel.pdm.droidmentor.domain.history.ConversationRepository
 import isel.pdm.droidmentor.domain.history.matches
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * Everything the Chat History screen displays, held by [ChatHistoryScreenViewModel].
@@ -42,13 +45,15 @@ sealed class ChatHistoryScreenState {
 /**
  * Holds the state of the Chat History screen.
  *
- * Starts [ChatHistoryScreenState.Loading] and loads the saved chats as soon as it is created.
- * Chats are not persisted yet, so loading always ends in [ChatHistoryScreenState.Empty].
+ * Starts [ChatHistoryScreenState.Loading] and observes the chats in [repository] as soon as
+ * it is created, so the list follows every change (including chats created in other screens).
  *
  * Deleting a chat only hides it at first, so it can be undone while the snackbar is showing.
  * It is deleted for good in [confirmDelete].
  */
-class ChatHistoryScreenViewModel : ViewModel() {
+class ChatHistoryScreenViewModel(
+    private val repository: ConversationRepository,
+) : ViewModel() {
 
     /** Every saved chat, most recent first; `null` while they are being loaded. */
     private var chats: List<ChatSummary>? by mutableStateOf(null)
@@ -76,13 +81,10 @@ class ChatHistoryScreenViewModel : ViewModel() {
         loadChats()
     }
 
-    /** Loads the saved chats off the main thread, then shows them. */
+    /** Observes the saved chats: every new list from the repository replaces the shown one. */
     private fun loadChats() {
         viewModelScope.launch {
-            chats = withContext(Dispatchers.IO) {
-                // TODO carregar as conversas guardadas, fora da main thread???? depende do que usar para ler ROOMS?
-                emptyList()
-            }
+            repository.chats.collect { chats = it }
         }
     }
 
@@ -107,13 +109,22 @@ class ChatHistoryScreenViewModel : ViewModel() {
     /** Makes the deletion of [deletedChat] final: it can no longer be undone. */
     fun confirmDelete() {
         val chat = deletedChat ?: return
-        // TODO apagar também a conversa guardada (chat.id)
+        // Removed here at once, so it doesn't show up again until the repository emits the list without it
         chats = chats?.minus(chat)
         deletedChat = null
+        // NonCancellable: onCleared also calls this, when viewModelScope is already cancelled
+        viewModelScope.launch(NonCancellable) { repository.delete(chat.id) }
     }
 
     override fun onCleared() {
         // Leaving the screen while the snackbar is showing also makes the deletion final
         confirmDelete()
+    }
+
+    companion object {
+        /** Factory that gives the ViewModel the app's repository. */
+        fun factory(dependencies: DependenciesContainer) = viewModelFactory {
+            initializer { ChatHistoryScreenViewModel(dependencies.conversationRepository) }
+        }
     }
 }

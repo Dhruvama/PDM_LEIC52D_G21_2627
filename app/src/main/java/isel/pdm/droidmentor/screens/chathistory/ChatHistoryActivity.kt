@@ -7,13 +7,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import isel.pdm.droidmentor.DependenciesContainer
 import isel.pdm.droidmentor.UserTheme
 import isel.pdm.droidmentor.screens.activechat.ActiveChatActivity
 import isel.pdm.droidmentor.buildLogTag
 
 class ChatHistoryActivity : ComponentActivity() {
 
-    private val viewModel by viewModels<ChatHistoryScreenViewModel>()
+    private val viewModel: ChatHistoryScreenViewModel by viewModels {
+        ChatHistoryScreenViewModel.factory(application as DependenciesContainer)
+    }
     private val logTag = buildLogTag(this::class.java.simpleName)
 
     companion object {
