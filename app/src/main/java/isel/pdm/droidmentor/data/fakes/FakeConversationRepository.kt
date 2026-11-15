@@ -7,8 +7,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.update
-import java.util.concurrent.atomic.AtomicLong
 import kotlin.time.Duration.Companion.milliseconds
 
 /** Maximum length of a chat title taken from its first message. */
@@ -18,6 +16,11 @@ private const val TITLE_MAX_LENGTH = 30
  * A fake implementation of the [ConversationRepository] interface, keeping the chats in memory.
  * We use it to have fine control over the repository behavior while developing the app.
  *
+ * It is meant to be used only during development and in tests, confined to the main thread. It is
+ * therefore not thread safe: each operation is atomic because it runs without suspending. The
+ * collection is published through a state flow, so that all observable queries are updated after
+ * each change.
+ *
  * @param initialChats The chats that exist when the repository is created.
  */
 class FakeConversationRepository(
@@ -26,8 +29,7 @@ class FakeConversationRepository(
 
     private val saved = MutableStateFlow(initialChats)
 
-    // TODO Verificar se usamos modelo de concorrencia simplificado
-    private val nextId = AtomicLong((initialChats.maxOfOrNull { it.id } ?: 0L) + 1)
+    private var nextId = (initialChats.maxOfOrNull { it.id } ?: 0L) + 1
 
     override val chats: Flow<List<ChatSummary>> = saved
         .map { chats -> chats.sortedByDescending { it.lastUpdatedMillis } }
@@ -37,19 +39,19 @@ class FakeConversationRepository(
     override suspend fun create(firstMessage: String): Long {
         delay(200.milliseconds) // Simulate writing to the database
         val chat = ChatSummary(
-            id = nextId.getAndIncrement(),
+            id = nextId++,
             title = firstMessage.trim().take(TITLE_MAX_LENGTH),
             lastMessage = firstMessage,
             lastUpdatedMillis = System.currentTimeMillis(),
             messageCount = 1,
         )
-        saved.update { it + chat }
+        saved.value = saved.value + chat
         return chat.id
     }
 
     override suspend fun delete(id: Long) {
         delay(200.milliseconds) // Simulate writing to the database
-        saved.update { chats -> chats.filterNot { it.id == id } }
+        saved.value = saved.value.filterNot { it.id == id }
     }
 }
 

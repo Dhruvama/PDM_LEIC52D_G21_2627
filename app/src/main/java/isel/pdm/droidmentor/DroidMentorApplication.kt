@@ -2,6 +2,8 @@ package isel.pdm.droidmentor
 
 import android.app.Application
 import isel.pdm.droidmentor.data.fakes.FakeConversationRepository
+import isel.pdm.droidmentor.data.fakes.FakeMessageRepository
+import isel.pdm.droidmentor.domain.chat.MessageRepository
 import isel.pdm.droidmentor.domain.history.ConversationRepository
 import isel.pdm.droidmentor.screens.settings.AppColorsRepository
 import isel.pdm.droidmentor.screens.settings.settingsDataStore
@@ -12,6 +14,11 @@ class DroidMentorApplication : DependenciesContainer, Application() {
     /** Saved chats. In memory until the Room implementation exists. */
     override val conversationRepository: ConversationRepository by lazy {
         FakeConversationRepository()
+    }
+
+    /** Messages of each saved chat. In memory until the Room implementation exists. */
+    override val messageRepository: MessageRepository by lazy {
+        FakeMessageRepository()
     }
 
     /** Colors chosen by the user. */
