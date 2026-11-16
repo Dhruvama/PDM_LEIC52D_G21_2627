@@ -1,94 +1,138 @@
-# DroidMentor — Plano de Projeto
+# DroidMentor — Plano de Projeto (v3)
 
 **Grupo:** Dhruva Adão · João Sousa · Paulo Vaz
 **Período:** 19/10/2026 → 12/12/2026
 
-As tarefas de cada semana usam as matérias dadas nas aulas até essa semana, seguindo o planeamento da cadeira.
+## Princípio da divisão
 
-## Marcos
+Cada membro é dono de uma
+**funcionalidade de ponta a ponta** (ecrã → ViewModel → repositório → Room / Ktor / DataStore), em vez de ficar com uma camada inteira.
+Assim todos trabalham com quase todas as tecnologias da cadeira, e as dependências entre membros reduzem-se a contratos (interfaces) bem definidos. Ninguém edita o ecrã, o ViewModel ou a implementação de outro membro. Quem precisa de algo de outra vertical usa o contrato ou o componente que esse membro publica.
 
-| Marco | Data | Entrega |
+**Quem implementa um contrato também o define.** Quem o usa diz o que precisa e aprova as assinaturas antes do fecho dos contratos.
+
+**Única exceção:** cada membro acrescenta a linha do seu repositório ou serviço ao `DependenciesContainer` e à `DroidMentorApplication`.
+
+**Entregas** (vídeos, README e tags `mentor_3` / `mentor_f`) são feitas por todos e não contam para a carga.
+
+| Membro | Funcionalidade (vertical) | Contratos de que é dono                                                                                                                   |
+|---|---|-------------------------------------------------------------------------------------------------------------------------------------------|
+| Dhruva Adão | Histórico de conversas, persistência das conversas e mensagens (Room), tema, modelo de falhas, imagens | `ConversationRepository`, `MessageRepository`, falhas (`sealed class`), `AppColorsRepository`                                             |
+| João Sousa | Conversa ativa: envio, reescrita, cliente Gemini | `LlmProviderService`                                                                                                                      |
+| Paulo Vaz | Arranque, sessão, definições, API key, conectividade e comportamento offline, mensagens de erro | `SessionRepository`, `SettingsRepository`, `ApiKeyRepository`, `ApiKeyValidator`, `ConnectivityObserver`, `AppDatabase` / service locator |
+
+## Estrutura e contratos
+
+Segue o padrão do exemplo do professor (GameVault):
+
+- **Contratos:** `core/.../domain/<feature>/`. Interfaces em Kotlin puro, sem Android. Os erros de I/O são traduzidos em exceções ou falhas de domínio.
+- **Implementações:** `app/.../data/datastore`, `data/room`, `data/remote`. Recebem as dependências (`DataStore`, DAO, `HttpClient`) no construtor e nunca as criam.
+- **Fakes:** `app/.../data/fakes/`. Em memória, com `delay()` para simular latência. São também usados nos testes dos ViewModels.
+- **Service locator:** `DependenciesContainer` (interface) implementado pela `DroidMentorApplication`. Os ViewModels recebem as interfaces pelo construtor, e a factory recebe o `DependenciesContainer`.
+- Os placeholders `core/.../repo`, `core/.../service`, `domain/test.kt`, `testdatastorefile.kt` e `testroomfile.kt` são removidos.
+
+| Contrato | Pacote (`core`) | Dono | Usado por |
+|---|---|---|---|
+| `ConversationRepository` | `domain/history` | Dhruva | Chat History, Active Chat |
+| `MessageRepository` | `domain/chat` | Dhruva | Active Chat |
+| Falhas (`sealed class`) | `domain/chat` | Dhruva | `LlmProviderService`, `ApiKeyValidator`, mapeador falha → mensagem |
+| `LlmProviderService` | `domain/chat` | João | Active Chat |
+| `SessionRepository` (último chat ativo) | `domain/session` | Paulo | Arranque, navegação, Active Chat |
+| `SettingsRepository` | `domain/settings` | Paulo | Settings, Active Chat (persona e modelo) |
+| `ApiKeyRepository` | `domain/settings` | Paulo | Settings, `LlmProviderService` |
+| `ApiKeyValidator` | `domain/settings` | Paulo | Settings |
+| `ConnectivityObserver` | `domain/connectivity` | Paulo | Active Chat, `LlmProviderService` |
+| `AppColorsRepository` | `app/.../ui/theme` (usa `Color` do Compose) | Dhruva | Tema, Settings |
+
+| Ficheiro DataStore | Dono | Conteúdo |
 |---|---|---|
-| Milestone 3 | 16/11/2026 | Vídeo (5–7 min) + tag `mentor_3` |
-| Final | 12/12/2026 | App completa + vídeo (5–7 min) + tag `mentor_f` |
-| Discussões | a partir de 14/12/2026 | — |
+| `theme` | Dhruva | Cores escolhidas (o atual ficheiro `settings` das cores muda de nome) |
+| `session` | Paulo | Id do último chat ativo |
+| `settings` | Paulo | Definições da app (nível do mentor, modelo, …) |
+| `credentials` | Paulo | API key, **excluída** em `backup_rules.xml` e `data_extraction_rules.xml` |
 
-## Responsabilidades gerais
+## Quem toca em quê
 
-| Membro | Ecrãs | Camada de dados / infraestrutura |
-|---|---|---|
-| Dhruva Adão | About, Chat History, Tema | Room (conversas e mensagens) |
-| João Sousa | Active Chat | Cliente Gemini (Ktor + Kotlinx Serialization) |
-| Paulo Vaz | Title, Settings, Navegação | `Application` (service locator), DataStore, conectividade |
-
-Cada membro trata das animações dos seus ecrãs.
+| Tecnologia | Dhruva Adão | João Sousa | Paulo Vaz |
+|---|---|---|---|
+| Compose / UI | About, Chat History, Tema, galeria e câmara | Active Chat (incluindo modo de edição) | Title, Settings, Navegação, `OfflineBanner`, `ErrorBanner`, componente offline do Active Chat |
+| ViewModel | `ChatHistoryScreenViewModel` | `ActiveChatScreenViewModel` | `TitleViewModel`, `SettingsViewModel` |
+| Room | Entidades `Conversation` e `Message` (FK com cascata), DAOs, pesquisa, query de reescrita; coluna de imagem (URI) em `Message` e respetiva migração | — (usa o `MessageRepository` através da interface) | `AppDatabase`, `TypeConverters`, query de arranque |
+| Ktor + Serialization | Modelo de falhas (mapeamento de erros HTTP, timeouts, logging); `system_instruction` com a persona; imagens no pedido (`inline_data`); todos os testes com `MockEngine` | Cliente base, DTOs, conversão DTO ↔ domínio, `contents`, `rewriteFrom` | `ApiKeyValidator` (`GET models`) |
+| DataStore | `theme` | — | `settings` + `credentials` + `session` |
+| Outros | — | — | `ConnectivityObserver`, mapeador falha → mensagem PT/EN |
 
 ---
 
 ## Fase 1 — Visuais (Semana 7: 19/10 → 25/10)
+
 *Matéria aplicada: Jetpack Compose, Material 3, recursos (strings PT/EN), orientações.*
 
-Só UI, com dados *hardcoded*. Não há funcionalidades.
-
 | Dhruva Adão | João Sousa | Paulo Vaz |
 |---|---|---|
-| Tema: cores, tipografia, dark/light, componentes base (botões, inputs, cards). **Primeira tarefa, porque todos dependem dele.** | Active Chat: balões user/model, campo de input, botão enviar | Title (menu principal) |
-| About (app + autores) | Estados visuais: a carregar, erro, offline | Settings: input da API key, mostrar/ocultar |
-| Chat History: lista, item, estado vazio, diálogo de apagar | Modo de edição de mensagem | Navegação entre ecrãs (Figura 1 do enunciado) |
-| Animações dos seus ecrãs | Ajuda pontual nos ecrãs dos colegas + animações | Animações dos seus ecrãs |
+| Tema custom e componentes base | Active Chat | Title (menu principal) |
+| About | Estados visuais: a carregar, erro, offline | Settings: API key, definições, customização |
+| Chat History: lista, pesquisa, apagar | Modo de edição de mensagem | Navegação entre ecrãs |
 
 ## Fase 2 — ViewModels (Semana 8: 26/10 → 01/11)
-*Matéria aplicada: ViewModel, StateFlow, `viewModelScope`, `collectAsStateWithLifecycle`, `Application` como service locator.*
+*Matéria aplicada: ViewModel, `viewModelScope`, `collectAsStateWithLifecycle`, `Application` como service locator.*
 
-Cada ecrã passa a ser uma máquina de estados num ViewModel. Os ViewModels usam repositórios *fake* com contratos `suspend` realistas.
+Cada membro define a **interface** e o **fake em memória** de cada contrato de que é dono, com contratos `suspend`/`Flow` realistas. Quem usa o contrato aprova as assinaturas. Os contratos devem estar no `core` até 07/11, para ninguém ficar bloqueado. Os contratos e os fakes são feitos antes dos ViewModels, porque com os fakes os outros conseguem avançar sem esperar pelas implementações reais.
 
 | Dhruva Adão | João Sousa | Paulo Vaz |
 |---|---|---|
-| `HistoryViewModel`: listar e apagar conversas | `ChatViewModel`: estados Idle, Loading, Error e Offline; enviar mensagem | `TitleViewModel` e `SettingsViewModel` (guardar e validar a key) |
-| Interfaces dos repositórios (contratos partilhados por todos) | Reescrita: editar a mensagem *n* invalida as mensagens seguintes | `DroidMentorApplication` como service locator, com os *fakes* |
-| Implementações *fake* em memória | Testes unitários do `ChatViewModel` | Verificar que o estado sobrevive a rotação e a *config changes* |
+| Interface + fake de `ConversationRepository` (listar, pesquisar, criar, apagar) | Interface + fake de `LlmProviderService` (latência, respostas e falhas simuladas) | Interface + fake de `SettingsRepository` e de `ApiKeyRepository` |
+| Interface + fake de `MessageRepository` (incluindo apagar depois da posição *n*), com as assinaturas aprovadas pelo João + `sealed class` de falhas (incluindo `Offline`) | — | Interface + fake de `ApiKeyValidator`, de `ConnectivityObserver` e de `SessionRepository` (último chat ativo) |
+| `ChatHistoryScreenViewModel`: listar, pesquisar e apagar conversas | `ActiveChatScreenViewModel`: estados Idle, Waiting, Failed e Offline; enviar mensagem | `TitleViewModel` e `SettingsViewModel` (guardar e validar a key) |
+| `AppColorsRepository` passa a interface + implementação DataStore (a persistência já existe) | Reescrita no ViewModel: editar a mensagem *n* invalida as seguintes | `DependenciesContainer` + `DroidMentorApplication` com os fakes de todos |
+| Testes unitários do `ChatHistoryScreenViewModel` | Testes unitários do `ActiveChatScreenViewModel` | Testes unitários dos seus ViewModels + verificar rotação e *config changes* |
 
 ## Fase 3 — Camada de dados (Semanas 9–10: 02/11 → 15/11)
+
 *Matéria aplicada: Ktor, Kotlinx Serialization, DTOs, modelo de falhas, DataStore, Room.*
 
-| Dhruva Adão — Room | João Sousa — Gemini API | Paulo Vaz — Infraestrutura |
-|---|---|---|
-| Entidades `Conversation` e `Message`, DAOs | Cliente Ktor, DTOs e conversão DTO ↔ domínio | DataStore: API key e id do último chat ativo |
-| Apagar conversas em cascata | Pedido stateless: histórico completo em `contents`, alternando `user`/`model` | Verificação de conectividade antes de cada pedido |
-| Query que apaga as mensagens após a posição *n* (reescrita) | `system_instruction` com a persona de mentor Android | Trocar os *fakes* pelas implementações reais no service locator |
-| `ChatRepository` sobre Room | Erros HTTP (400/403 key inválida, 429, 500), timeouts, logging | Lógica de arranque: abrir o último chat ativo ou o Title |
+O Room fica com o Dhruva e o Paulo. Todos fazem uma parte de Ktor. O DataStore fica com o Dhruva e o Paulo.
 
-### Milestone 3 — 16/11/2026
-Cada membro grava 1–2 minutos sobre a sua parte. Paulo Vaz junta e edita o vídeo, atualiza o README e cria a tag `mentor_3`.
+| | Dhruva Adão | João Sousa | Paulo Vaz |
+|---|---|---|---|
+| **Room** | Entidades `Conversation` e `Message` (FK para `Conversation` com `onDelete = CASCADE`) + DAOs; query de pesquisa; query que apaga as mensagens após a posição *n*; `ConversationRepository` e `MessageRepository` reais | — | `AppDatabase`, `TypeConverters`, criação da BD no service locator; query "existe a conversa X?" para o arranque |
+| **Ktor** | Modelo de falhas: mapeamento de 400/403 (key inválida), 429, 500 e timeouts, e logging. Publicado como função `(HttpResponse` ou `Throwable) → falha`, usada pelo cliente do João e pelo validador do Paulo. Texto da `system_instruction` com a persona, gerado a partir das definições do mentor (função publicada, usada pelo cliente do João) | Cliente Ktor, DTOs, conversão DTO ↔ domínio; pedido stateless com o histórico completo em `contents` (`user`/`model`) e a `system_instruction` do Dhruva; `LlmProviderService` real | `ApiKeyValidator` real (`GET models`), que reutiliza o `HttpClient` e o mapeamento de falhas |
+| **DataStore** | Ficheiro `theme` (mudar o nome do atual) | — | Ficheiros `settings`, `credentials` e `session`: repositórios reais + exclusão dos backups |
+| **Outros** | — | Envio mínimo a funcionar de ponta a ponta (uma mensagem → Room → API → resposta no ecrã) | `ConnectivityObserver` real (`Flow` online/offline); trocar os fakes pelas implementações reais; lógica de arranque (último chat ativo ou Title; se a conversa guardada já não existir, vai para o Title) |
+
+**Ordem dentro da fase:** o João publica o cliente base e os DTOs até 09/11. O João e o Dhruva combinam desde já onde fica a configuração do `HttpTimeout`. O Dhruva publica o mapeamento de falhas até 10/11 e o `MessageRepository` real até 12/11, para o João ter o envio de ponta a ponta antes do milestone. Por isso, o Dhruva faz primeiro o Room das mensagens (entidade `Message`, `MessageDao`, `MessageRepository`) e só depois a pesquisa e o resto do Chat History. O Paulo faz primeiro o DataStore, a `AppDatabase` e o `ConnectivityObserver` (não dependem de ninguém) e só depois o validador.
+
+**Milestone 3:** 16/11/2026.
 
 ## Fase 4 — Integração + Imagens (Semanas 11–12: 16/11 → 29/11)
 
 | Dhruva Adão | João Sousa | Paulo Vaz |
 |---|---|---|
-| Ligar Chat History ao Room | Fluxo completo de envio no Active Chat (Room + API) | Fechar ou sair do chat limpa o "último chat ativo" |
-| Reescrita ponta a ponta (BD + UI) | Feedback de erros na UI | Banner offline; envio bloqueado sem rede (histórico disponível offline) |
-| **Imagens (opcional):** guardar os ficheiros no armazenamento local e só o URI/caminho no Room | **Imagens (opcional):** enviar a imagem no pedido ao Gemini (`inline_data`) | **Imagens (opcional):** galeria e câmara (permissões, FileProvider) |
+| Ligar Chat History ao Room (pesquisa e apagar reais) | Fluxo completo de envio no Active Chat (Room + API) | Mapeador falha → mensagem PT/EN, usado pelo Active Chat e pelas Settings |
+| Criar a conversa na BD ao enviar a primeira mensagem: `ConversationRepository.create` com o título tirado da 1.ª mensagem (o João só a chama) | Reescrita de ponta a ponta: `rewriteFrom(conversationId, posicao, novoTexto)` usa o `MessageRepository` para apagar as mensagens seguintes e guardar a editada, e reutiliza o envio normal; o modo de edição chama-a | Componentes `OfflineBanner` e `ErrorBanner` |
+| Tema aplicado a partir do DataStore em toda a app | Mostrar os erros no Active Chat com o mapeador do Paulo; inserir no ecrã o componente offline do Paulo | Comportamento offline do Active Chat: componente publicado que mostra o banner e indica se o envio está bloqueado (o histórico continua disponível offline). O João só o insere no ecrã |
+| **Imagens:** galeria e câmara (permissões, FileProvider); ficheiros no armazenamento local e só o URI no Room (coluna nova em `Message`); envio no pedido ao Gemini (`inline_data`, DTO + base64) | — | Limpar o "último chat ativo" na navegação ao sair do Active Chat; feedback da validação da key nas Settings |
 
+**Dependências dentro da fase:** o Paulo publica o mapeador de erros, os banners e o componente offline até 19/11.
 ## Fase 5 — Testes e entrega (Semanas 13–14: 30/11 → 12/12)
+
+Cada membro testa sobretudo o que construiu. Há duas exceções, para equilibrar a carga:
+- Os testes com `MockEngine` ficam todos com o Dhruva, que já monta o `MockEngine` para os erros.
+- Os testes de UI do Chat History e do estado offline do Active Chat ficam com o Paulo.
+
+Testar o código de outro membro também ajuda a encontrar falhas que o autor não veria.
 
 | Dhruva Adão | João Sousa | Paulo Vaz |
 |---|---|---|
-| Testes instrumentados dos DAOs | Testes do cliente com Ktor `MockEngine` (sucesso, 429, 500) | Testes de navegação e de UI (Compose) |
-| README final | Edição do vídeo final | Testes manuais: offline, rotação, morte do processo |
-| — | — | Tag `mentor_f` |
+| Testes instrumentados do `ConversationDao` (pesquisa e cascata) e do `MessageDao` (reescrita) | Testes de UI (Compose) do Active Chat, incluindo o modo de edição | Testes do DataStore (`settings`, `credentials`, `session`) e da lógica de arranque |
+| Testes Ktor com `MockEngine`: sucesso, serialização do pedido, 400/403, 429, 500, timeout | Testes de `rewriteFrom` | Teste Ktor da validação da key; testes do mapeador e do `ConnectivityObserver` |
+| — | — | Testes de navegação e de UI das Settings, do Chat History e do estado offline do Active Chat |
+| **Imagens:** testes do pedido com `inline_data` e da coluna de URI | — | Checklist dos testes manuais (offline, rotação, morte do processo) |
 
-**08/12 → 11/12:** todos corrigem bugs. O dia 12/12 fica só como margem.
+**Testes manuais (todos, cada um no seu dispositivo ou emulador):** seguindo o checklist do Paulo.
+
+**08/12 → 11/12:** correção de bugs. O dia 12/12 fica só como margem.
 
 ---
 
-## Equilíbrio de carga
-
-| Fase | Dhruva Adão | João Sousa | Paulo Vaz |
-|---|---|---|---|
-| 1 | Tema + 2 ecrãs | 1 ecrã complexo + apoio | 2 ecrãs + navegação |
-| 2 | 1 VM + contratos + *fakes* | 1 VM complexo + testes | 2 VMs + service locator |
-| 3 | Room | Ktor / Gemini | DataStore + rede + arranque + vídeo M3 |
-| 4 | Reescrita + imagens (storage) | Fluxo de envio + imagens (API) | Offline + imagens (galeria/câmara) |
-| 5 | Testes BD + README | Testes rede + vídeo | Testes UI + tag |
-
-O Active Chat é o ecrã mais complexo e fica com João Sousa em todas as fases. Para compensar, as tarefas de entrega (vídeo do M3, tags, README) ficam com Dhruva Adão e Paulo Vaz.
+Este plano é um ponto de partida. Se a carga ficar desproporcional, o grupo faz ajustes no fim de cada fase. As interfaces são o contrato entre membros: qualquer alteração a uma interface é combinada com o grupo antes de ser feita.
